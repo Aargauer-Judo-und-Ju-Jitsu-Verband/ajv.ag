@@ -4,41 +4,103 @@ const currentYear = new Date().getFullYear();
 
 <footer class="bg-brand-900 text-brand-300">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-12">
-      <div class="max-w-sm">
-        <img src="/images/logo/ajv_logo.webp" alt="AJV Logo" class="h-10 w-auto brightness-0 invert opacity-70" />
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-10">
+      <!-- Brand -->
+      <div>
+        <div class="flex items-center gap-3">
+          <img src="/images/logo/ajv_logo.webp" alt="AJV Logo" class="h-10 w-auto brightness-0 invert opacity-70" />
+          <span class="text-white font-display font-bold text-lg">AJV.ag</span>
+        </div>
         <p class="mt-4 text-sm leading-relaxed text-brand-300/70">
-          Förderung und Entwicklung von Judo und Ju-Jitsu im Kanton Aargau seit 1963.
+          Aargauer Judo und Ju-Jitsu Verband — Förderung von Judo und Ju-Jitsu im Kanton Aargau seit 1963.
         </p>
-        <div class="mt-5 flex items-center gap-4">
-          <img src="/images/sponsors/swisslos-sportfonds.webp" alt="Swisslos Sportfonds" class="h-8 w-auto opacity-40" />
+
+        <!-- YouTube -->
+        <a
+          href="https://www.youtube.com/@AJV-ag"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 mt-5 text-sm text-brand-300 hover:text-white transition-colors"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+          Youtube
+        </a>
+
+        <!-- Swisslos -->
+        <div class="mt-5">
+          <img src="/images/sponsors/swisslos-sportfonds.webp" alt="Swisslos Sportfonds Aargau" class="h-14 w-auto opacity-50" />
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-12 lg:gap-16">
-        <div>
-          <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.2em] mb-4">Navigation</p>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="/verband" class="hover:text-white transition-colors">Verband</a></li>
-            <li><a href="/aktuelles" class="hover:text-white transition-colors">Aktuelles</a></li>
-            <li><a href="/vereine" class="hover:text-white transition-colors">Vereine</a></li>
-            <li><a href="/veranstaltungen" class="hover:text-white transition-colors">Veranstaltungen</a></li>
-            <li><a href="/vorstand" class="hover:text-white transition-colors">Vorstand</a></li>
-          </ul>
+      <!-- Adresse -->
+      <div>
+        <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.2em] mb-4">Adresse</p>
+        <div class="text-sm space-y-1">
+          <p class="text-white font-semibold">Judo und Ju-Jitsu Verband Aargau</p>
+          <p>Landhausstrasse 7</p>
+          <p>4663 Aarburg</p>
         </div>
+        <a
+          href="https://www.judoaargau.ch/fileadmin/aargauer-judo-verband/downloads/AJV_Statuten.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block mt-5 text-sm text-brand-300 hover:text-white underline underline-offset-2 transition-colors"
+        >
+          AJV Statuten
+        </a>
+      </div>
 
-        <div>
-          <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.2em] mb-4">Kontakt</p>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="mailto:info@ajv.ag" class="hover:text-white transition-colors">info@ajv.ag</a></li>
-            <li><a href="/kontakt" class="hover:text-white transition-colors">Kontaktformular</a></li>
-            <li>
-              <a href="/mitglied-werden" class="text-white font-medium hover:text-brand-200 transition-colors">
-                Mitglied werden
-              </a>
-            </li>
-          </ul>
-        </div>
+      <!-- Navigation -->
+      <div>
+        <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.2em] mb-4">Navigation</p>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="/verband" class="hover:text-white transition-colors">Verband</a></li>
+          <li><a href="/kantonalkader" class="hover:text-white transition-colors">Kantonalkader</a></li>
+          <li><a href="/aktuelles" class="hover:text-white transition-colors">Aktuelles</a></li>
+          <li><a href="/vereine" class="hover:text-white transition-colors">Vereine</a></li>
+          <li><a href="/veranstaltungen" class="hover:text-white transition-colors">Veranstaltungen</a></li>
+          <li><a href="/vorstand" class="hover:text-white transition-colors">Vorstand</a></li>
+          <li><a href="/kontakt" class="hover:text-white transition-colors">Kontakt</a></li>
+          <li>
+            <a href="/mitglied-werden" class="text-white font-medium hover:text-brand-200 transition-colors">
+              Mitglied werden
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Links -->
+      <div>
+        <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.2em] mb-4">Links</p>
+        <ul class="space-y-2.5 text-sm">
+          <li>
+            <a href="https://www.ijf.org/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">
+              IJF <span class="text-brand-400/60">— International Judo Federation</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.sjv.ch/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">
+              SJV <span class="text-brand-400/60">— Schweizerischer Judo & Ju-Jitsu Verband</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.specialolympics.ch/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">
+              Special Olympics
+            </a>
+          </li>
+          <li>
+            <a href="https://www.nlz-brugg.ch/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">
+              NLZ Brugg <span class="text-brand-400/60">— Stützpunkt Training</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.swisslos.ch/de/ueber-swisslos/sportfonds.html" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">
+              Swisslos Sportfonds Aargau <span class="text-brand-400/60">— Sponsor</span>
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
 
