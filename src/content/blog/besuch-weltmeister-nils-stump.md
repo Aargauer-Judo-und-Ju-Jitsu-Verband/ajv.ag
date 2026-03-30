@@ -3,6 +3,8 @@ title: "Besuch von Weltmeister Nils Stump — Ein inspirierender Tag für den AJ
 date: 2025-12-02
 description: "Der AJV durfte den Judoweltmeister Nils Stump zu zwei besonderen Trainingseinheiten begrüssen."
 category: "Events"
+image: "../../assets/images/blog/stump-nils-ajv-2025.webp"
+imageAlt: "Nils Stump beim Training mit dem AJV"
 ---
 
 Am 22. November durfte der AJV den Judoweltmeister Nils Stump zu zwei besonderen Trainingseinheiten begrüssen - eine für Kinder, eine für Erwachsene. Die Trainings fanden im Dojo des Judo Club Baden-Wettingen statt.

@@ -3,6 +3,8 @@ title: "1. Aargauer Ju-Jitsu Day"
 date: 2025-08-31
 description: "Rückblick auf den ersten Aargauer Ju-Jitsu Day mit 68 Teilnehmenden."
 youtube: "https://www.youtube.com/watch?v=HECIfYSXtEM"
+image: "../../assets/images/blog/ju-jitsu-day-1.webp"
+imageAlt: "1. Aargauer Ju-Jitsu Day 2025"
 ---
 
 Am 30. August 2025 trafen sich 68 Ju-Jitsu-, Judo-, Karate- und Aikido-kas zum ersten Aargauer Ju-Jitsu Day. Der Initiator, René Burch (6. Dan Ju-Jitsu) und der Aargauer Judo- und Ju-Jitsu Verband AJV wollten ihren Mitgliedern einen interessanten Tag bescheren und weiteten diesen Kurs auch für andere interessierte Budokas aus. Im Dojo, dem Trainingsraum des Judo Clubs Baden-Wettingen, wurde während vier Stunden gemeinsam trainiert, gelacht und sich ausgetauscht.
