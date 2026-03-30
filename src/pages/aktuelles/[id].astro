@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { id: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <!-- Hero -->
+  <section class="relative bg-brand-700 text-white hero-overlay py-20 lg:py-28 overflow-hidden">
+    <div class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-bl from-brand-300/10 to-transparent pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <a href="/aktuelles" class="animate-fade-up inline-flex items-center gap-1 text-brand-200 hover:text-brand-400 text-xs font-semibold uppercase tracking-wider transition-colors">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+        </svg>
+        Alle Beiträge
+      </a>
+      <h1 class="animate-fade-up stagger-1 mt-6 font-display font-extrabold text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight">
+        {post.data.title}
+      </h1>
+      <time class="animate-fade-up stagger-2 mt-5 block text-xs text-brand-200 uppercase tracking-wider" datetime={post.data.date.toISOString()}>
+        {post.data.date.toLocaleDateString('de-CH', { year: 'numeric', month: 'long', day: 'numeric' })}
+      </time>
+    </div>
+  </section>
+
+  <!-- Article Content -->
+  <section class="py-20 lg:py-28">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      {post.data.youtube && (
+        <div class="mb-12 aspect-video overflow-hidden rounded-lg border border-stone-200">
+          <iframe
+            src={`https://www.youtube.com/embed/${post.data.youtube.split('v=')[1]}`}
+            title={post.data.title}
+            width="100%"
+            height="100%"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            class="w-full h-full"
+          ></iframe>
+        </div>
+      )}
+      <article class="prose prose-lg max-w-none
+        [&>p]:text-stone-500 [&>p]:leading-relaxed
+        [&>ul]:text-stone-500 [&>ol]:text-stone-500
+        [&>h2]:font-display [&>h2]:font-bold [&>h2]:text-stone-900 [&>h2]:text-3xl
+        [&>h3]:font-display [&>h3]:font-semibold [&>h3]:text-stone-900 [&>h3]:text-2xl
+        [&>a]:text-brand-500 [&>a:hover]:text-brand-400
+        [&>strong]:text-stone-800
+        [&>blockquote]:border-l-brand-400 [&>blockquote]:text-stone-400">
+        <Content />
+      </article>
+
+      <div class="mt-16 pt-8 border-t border-stone-200">
+        <a href="/aktuelles" class="inline-flex items-center gap-2 text-xs font-semibold text-stone-500 uppercase tracking-wider hover:text-brand-500 transition-colors group">
+          <svg class="w-3 h-3 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+          </svg>
+          Zurück zu allen Beiträgen
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

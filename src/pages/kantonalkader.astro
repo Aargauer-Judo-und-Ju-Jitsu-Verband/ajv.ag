@@ -1,0 +1,338 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Image } from 'astro:assets';
+import termine1 from '../assets/images/kantonalkader/termine-2025-1.jpg';
+import termine2 from '../assets/images/kantonalkader/termine-2025-2.jpg';
+import stuetzpunkt from '../assets/images/kantonalkader/stuetzpunkttrainings.jpg';
+import kaderWeekend from '../assets/images/kantonalkader/kader-weekend-2022.jpg';
+---
+
+<BaseLayout title="Kantonalkader" description="Judo Kantonalkader Aargau — Nachwuchsförderung für U11, U13 und U15 Judoka">
+  <!-- Hero -->
+  <section class="relative bg-brand-700 text-white hero-overlay py-20 lg:py-28 overflow-hidden">
+    <div class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-bl from-brand-300/10 to-transparent pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="animate-fade-up text-brand-200 text-xs font-semibold uppercase tracking-[0.3em] mb-6">
+        Nachwuchsförderung
+      </p>
+      <h1 class="animate-fade-up stagger-1 font-display font-extrabold text-4xl sm:text-5xl lg:text-7xl leading-[0.95] tracking-tight">
+        Kantonalkader Judo
+      </h1>
+      <p class="animate-fade-up stagger-2 mt-6 text-lg text-brand-200 max-w-2xl leading-relaxed">
+        Willkommen beim Aargauer Kantonalkader — das zentrale Fördergefäss für junge Judoka der Kategorien U11, U13 und U15.
+      </p>
+    </div>
+  </section>
+
+  <!-- Intro with photo -->
+  <section class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div>
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Über das Kader</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Das Aargauer Kantonalkader</h2>
+          <div class="mt-6 space-y-4 text-lg text-stone-500 leading-relaxed">
+            <p>
+              Die Kantonalkader sind ein Element der Judo-Nachwuchsförderung des SJV (Schweizerischen Judo & Ju-Jitsu Verbandes). Sie sind das zentrale Fördergefäss für den Einstieg in den Leistungssport und umfassen Judokas vom 9. bis 14. Lebensjahr.
+            </p>
+            <p>
+              Sie bilden das Fundament der Kaderstruktur und stellen die erste Stufe des leistungsförderlichen Aufbaus dar.
+            </p>
+          </div>
+        </div>
+        <div class="relative">
+          <Image
+            src={kaderWeekend}
+            alt="Kantonalkader Judo Aargau — Gruppenfoto"
+            class="rounded-lg shadow-lg w-full"
+            widths={[400, 800]}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ziele -->
+  <section class="py-20 lg:py-28 bg-stone-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Ziele</p>
+        <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Was wir anstreben</h2>
+      </div>
+      <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          { title: 'Vereine stärken', text: 'Unterstützen der Vereine des AJV in ihrer Nachwuchsarbeit.' },
+          { title: 'Nachhaltige Ausbildung', text: 'Nachhaltige Ausbildung für Nachwuchsjudoka im Wettkampfbereich.' },
+          { title: 'SJV U18 Kader', text: 'Vorbereitung für das SJV U18 Kader auf nationaler Ebene.' },
+          { title: 'NLZ Academy', text: 'Vorbereitung für das Regionale Leistungszentrum «NLZ Academy».' },
+          { title: 'Talentsichtung', text: 'Sichtung junger Nachwuchsjudoka für die Swiss Olympic Talentcards.' },
+        ].map((item) => (
+          <div class="bg-white border border-stone-200 rounded-lg p-6 card-hover">
+            <div class="w-8 h-0.5 bg-brand-500 rounded-full mb-4"></div>
+            <h3 class="font-display text-lg font-semibold text-stone-900 mb-2">{item.title}</h3>
+            <p class="text-stone-500 leading-relaxed">{item.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Kadermitglieder -->
+  <section class="py-20 lg:py-28">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Mitmachen</p>
+      <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Kadermitglieder</h2>
+      <div class="mt-6 space-y-4 text-lg text-stone-500 leading-relaxed">
+        <p>
+          Teilnahmeberechtigt sind alle Judoka U15 (Schüler A) und U13 (Schüler B) sowie die älteste U11 (Schüler C), die Mitglied sind in einem Verein des AJV.
+        </p>
+        <p>
+          Voraussetzungen:
+        </p>
+        <ul class="space-y-3 mt-2">
+          <li class="flex items-start gap-3">
+            <div class="w-1.5 h-1.5 bg-brand-400 mt-2.5 shrink-0"></div>
+            <span>Mindestens Gelbgurt</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-1.5 h-1.5 bg-brand-400 mt-2.5 shrink-0"></div>
+            <span>Spass am Judo und am Kämpfen</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-1.5 h-1.5 bg-brand-400 mt-2.5 shrink-0"></div>
+            <span>Bereitschaft, 1 Mal pro Woche zusätzlich zu trainieren</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stützpunkttrainings -->
+  <section id="stuetzpunkttrainings" class="py-20 lg:py-28 bg-stone-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+        <div>
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Wöchentlich</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Stützpunkttrainings</h2>
+          <div class="mt-6 space-y-4 text-lg text-stone-500 leading-relaxed">
+            <p>
+              Die Stützpunkttrainings finden jeweils am <strong class="text-stone-700">Samstag Morgen, 10:00–12:00 Uhr</strong> statt, im Dojo des Nationalen Leistungszentrums in Brugg/Windisch.
+            </p>
+            <p>
+              In diesem Wettkampftraining stehen Technik, Randori und Konditionstraining im Vordergrund.
+            </p>
+            <p>
+              Das Training richtet sich an die Alterskategorien U11, U13, U15 ab Gelbgurt und steht <strong class="text-stone-700">allen Aargauer Judoka offen</strong>.
+            </p>
+            <p>
+              Teilnahme ist jederzeit ohne Voranmeldung möglich.
+            </p>
+          </div>
+          <div class="mt-8 bg-white border border-stone-200 rounded-lg p-6">
+            <h3 class="font-display font-semibold text-stone-900 mb-2">Trainingsort</h3>
+            <p class="text-stone-500">
+              Sportausbildungszentrum Mülimatt<br />
+              Gaswerkstrasse 2<br />
+              5210 Windisch (AG)
+            </p>
+          </div>
+        </div>
+        <div>
+          <Image
+            src={stuetzpunkt}
+            alt="Stützpunkttrainings Terminplan 2025"
+            class="rounded-lg shadow-lg w-full"
+            widths={[400, 800]}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Termine 2025 -->
+  <section id="termine" class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Kalender</p>
+      <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Termine 2025</h2>
+      <div class="mt-6 space-y-4 text-lg text-stone-500 leading-relaxed max-w-3xl">
+        <p>
+          Regelmässige Teilnahme ist erwünscht — nur durch Training und regelmässiges Üben können Fortschritte gemacht werden. Auch schmiedet sich über die Zeit eine Mannschaft.
+        </p>
+        <p>
+          Die fett gedruckten Anlässe in der Übersicht sind die wichtigsten Termine.
+        </p>
+      </div>
+      <div class="mt-12 grid md:grid-cols-2 gap-8">
+        <div class="bg-white border border-stone-200 rounded-lg p-4 card-hover">
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-4 text-center">Januar – Juni</p>
+          <Image
+            src={termine1}
+            alt="Terminkalender Kantonalkader Januar bis Juni 2025"
+            class="rounded w-full"
+            widths={[400, 800]}
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        </div>
+        <div class="bg-white border border-stone-200 rounded-lg p-4 card-hover">
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-4 text-center">Juli – Dezember</p>
+          <Image
+            src={termine2}
+            alt="Terminkalender Kantonalkader Juli bis Dezember 2025"
+            class="rounded w-full"
+            widths={[400, 800]}
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ranking Turniere -->
+  <section class="py-20 lg:py-28 bg-stone-100">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Wettkampf</p>
+      <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Ranking Turniere</h2>
+      <div class="mt-6 space-y-4 text-lg text-stone-500 leading-relaxed">
+        <p>
+          Die Nationalmannschaft U15 besucht jährlich 2 internationale Turniere. Man kann sich mit sehr guten Resultaten an den Rankingturnieren für diese Massnahmen qualifizieren.
+        </p>
+        <p>
+          Nur Judoka der Alterskategorie Schüler A können sich für diese Turniere selektieren. Allfällige Vorbereitungsmassnahmen sind obligatorisch.
+        </p>
+        <p>
+          An den Ranking Turnieren können Judoka mit dem ältesten Schüler A Jahrgang auch bei den U18 starten und sich eventuell für die Schweizermeisterschaften U18 qualifizieren.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Probetraining CTA -->
+  <section id="probetraining" class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative bg-brand-700 text-white hero-overlay rounded-lg p-10 lg:p-16 overflow-hidden">
+        <div class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-bl from-brand-300/10 to-transparent pointer-events-none"></div>
+        <div class="relative max-w-2xl">
+          <p class="text-brand-200 text-xs font-semibold uppercase tracking-[0.3em] mb-4">Schnuppertraining</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold">Probetraining machen</h2>
+          <p class="mt-4 text-brand-200 text-lg leading-relaxed">
+            Alle interessierten Judoka zwischen 9 und 14 Jahren können ein Probetraining besuchen. Voraussetzung: viel Spass am Kämpfen!
+          </p>
+          <p class="mt-6 text-white leading-relaxed">
+            Einfach eine E-Mail an <a href="mailto:kantonalkader@gmail.com" class="underline underline-offset-4 hover:text-brand-200 transition-colors font-semibold">kantonalkader@gmail.com</a> mit folgenden Angaben:
+          </p>
+          <ul class="mt-4 grid sm:grid-cols-2 gap-x-8 gap-y-2 text-brand-100">
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              Name, Nachname
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              Geburtsdatum
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              Gürtelfarbe
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              Aktuelles Gewicht
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              Club & Name Trainer
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              SJV Budopass Nr.
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              Telefonnummer
+            </li>
+          </ul>
+          <a
+            href="mailto:kantonalkader@gmail.com?subject=Probetraining Kantonalkader"
+            class="inline-block mt-8 px-6 py-3 bg-white text-brand-700 text-sm font-semibold rounded-md hover:bg-stone-100 transition-colors"
+          >
+            E-Mail senden
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NLZ Academy -->
+  <section id="nlz-academy" class="py-20 lg:py-28 bg-stone-100">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Leistungssport</p>
+      <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">NLZ Academy</h2>
+      <div class="mt-6 space-y-4 text-lg text-stone-500 leading-relaxed">
+        <p>
+          Die NLZ Academy ist ein Regionales Leistungszentrum (RLZ), das Teil der Leistungssport-Struktur des SJV ist und teilweise im NLZ integriert ist.
+        </p>
+        <p>
+          In diesem Fördergefäss trainieren Judoka, die sich für den Leistungssport entschieden haben, bis zu 6 Tagen pro Woche. Um diesen Trainingsumfang zu ermöglichen, besuchen die meisten eine Sportschule oder machen eine sportfreundliche Lehre.
+        </p>
+        <p>
+          Ein Einstieg in die NLZ Academy ist ab Schüler A möglich.
+        </p>
+      </div>
+      <a
+        href="https://www.judocenter.ch"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 mt-6 text-sm font-semibold text-brand-600 tracking-wide hover:text-brand-700 transition-colors group"
+      >
+        Mehr auf judocenter.ch
+        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Kontakt -->
+  <section id="kontakt" class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16">
+        <div>
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Kontakt</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Kantonalkader-Leitung</h2>
+          <div class="mt-8 space-y-6">
+            <div class="bg-white border border-stone-200 rounded-lg p-6">
+              <h3 class="font-display font-semibold text-stone-900 text-lg">Jenny Gal</h3>
+              <p class="text-stone-500 mt-1">Verantwortliche Kantonalkader</p>
+              <a
+                href="mailto:kantonalkader@gmail.com"
+                class="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+              >
+                kantonalkader@gmail.com
+              </a>
+            </div>
+            <div class="bg-white border border-stone-200 rounded-lg p-6">
+              <h3 class="font-display font-semibold text-stone-900">Trainingsort</h3>
+              <p class="text-stone-500 mt-2">
+                Sportausbildungszentrum Mülimatt<br />
+                Gaswerkstrasse 2<br />
+                5210 Windisch (AG)
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white border border-stone-200 rounded-lg overflow-hidden shadow-lg">
+          <iframe
+            src="https://www.google.com/maps/embed/v1/place?key=REMOVED_MAPS_KEY&q=Sportausbildungszentrum+M%C3%BClimatt+Windisch&zoom=15"
+            width="100%"
+            height="100%"
+            style="border:0; min-height: 400px;"
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

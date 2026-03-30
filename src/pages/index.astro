@@ -1,0 +1,210 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+---
+
+<BaseLayout title="Startseite" description="Aargauer Judo und Ju-Jitsu Verband - Wir fördern Judo und Ju-Jitsu im Kanton Aargau seit 1963.">
+
+  <!-- Hero -->
+  <section class="relative bg-brand-700 text-white clip-diagonal hero-overlay overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-36 pb-32 lg:pb-44">
+      <div class="max-w-4xl">
+        <p class="animate-fade-up text-brand-200 text-xs font-semibold uppercase tracking-[0.3em] mb-6">
+          Seit 1963
+        </p>
+        <h1 class="animate-fade-up stagger-1 font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight">
+          Aargauer Judo<br />
+          <span class="text-brand-200">&</span> Ju-Jitsu Verband
+        </h1>
+        <p class="animate-fade-up stagger-2 mt-8 text-lg lg:text-xl text-brand-200 max-w-2xl leading-relaxed">
+          Wir fördern Judo und Ju-Jitsu auf allen Wettkampfstufen und setzen uns
+          für die Werte Respekt, Disziplin, Mut und Freundschaft ein.
+        </p>
+        <div class="animate-fade-up stagger-3 mt-10 flex flex-wrap gap-4">
+          <a
+            href="/vereine"
+            class="px-6 py-3 bg-white text-brand-700 font-semibold text-sm tracking-wide rounded-md hover:bg-stone-100 transition-colors"
+          >
+            Verein finden
+          </a>
+          <a
+            href="/mitglied-werden"
+            class="px-6 py-3 bg-brand-500 text-white font-semibold text-sm tracking-wide rounded-md hover:bg-brand-400 transition-colors border border-brand-400/30"
+          >
+            Mitglied werden
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values -->
+  <section class="relative -mt-12 lg:-mt-20 z-10 pb-16 lg:pb-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+        {[
+          { label: 'Respekt', desc: 'Achtung vor dem Gegenüber auf und neben der Matte' },
+          { label: 'Disziplin', desc: 'Konsequentes Training und Selbstbeherrschung' },
+          { label: 'Mut', desc: 'Herausforderungen annehmen und über sich hinauswachsen' },
+          { label: 'Freundschaft', desc: 'Gemeinsam wachsen und einander unterstützen' },
+        ].map((v, i) => (
+          <div class={`bg-white border border-stone-200 rounded-lg p-5 lg:p-6 card-hover animate-fade-up stagger-${i + 1}`}>
+            <div class="w-8 h-0.5 bg-brand-500 mb-4 rounded-full"></div>
+            <h3 class="font-display text-lg lg:text-xl font-bold text-stone-900">{v.label}</h3>
+            <p class="mt-2 text-sm text-stone-500 leading-relaxed">{v.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="py-20 lg:py-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-4">Der Verband</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 leading-tight heading-accent">
+            Wir vertreten Judo und Ju-Jitsu im Aargau
+          </h2>
+          <p class="mt-8 text-stone-600 text-lg leading-relaxed">
+            Der Aargauer Judo und Ju-Jitsu Verband (AJV) ist die offizielle Vertretung aller
+            Judo- und Ju-Jitsu-Vereine im Kanton Aargau. Wir fördern den Sport auf allen Ebenen
+            — vom Breitensport bis zum Spitzensport.
+          </p>
+          <p class="mt-4 text-stone-600 leading-relaxed">
+            Als Mitglied des Schweizerischen Judo & Ju-Jitsu Verbands (SJV) sind wir Teil
+            eines starken nationalen Netzwerks und bieten unseren Athleten optimale Entwicklungsmöglichkeiten.
+          </p>
+          <a
+            href="/verband"
+            class="inline-flex items-center gap-2 mt-8 text-sm font-semibold text-brand-600 tracking-wide hover:text-brand-700 transition-colors group"
+          >
+            Mehr erfahren
+            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+        <div class="relative">
+          <div class="aspect-[4/3] bg-stone-100 rounded-lg overflow-hidden">
+            <img
+              src="/images/events/ju-jitsu-day-1.webp"
+              alt="Ju-Jitsu Training"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div class="absolute -bottom-3 -right-3 w-full h-full border-2 border-brand-200 rounded-lg -z-10"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- News -->
+  <section class="py-20 lg:py-28 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-end justify-between mb-12">
+        <div>
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Neuigkeiten</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Aktuelles</h2>
+        </div>
+        <a
+          href="/aktuelles"
+          class="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-stone-500 hover:text-brand-600 transition-colors group"
+        >
+          Alle Beiträge
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {posts.map((post) => (
+          <a href={`/aktuelles/${post.id}`} class="group">
+            <article class="bg-stone-50 border border-stone-200 rounded-lg p-6 lg:p-7 h-full card-hover">
+              <time class="text-xs text-stone-500 uppercase tracking-wider" datetime={post.data.date.toISOString()}>
+                {post.data.date.toLocaleDateString('de-CH', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </time>
+              <h3 class="mt-3 font-display text-xl font-semibold text-stone-900 group-hover:text-brand-600 transition-colors leading-snug">
+                {post.data.title}
+              </h3>
+              <p class="mt-3 text-sm text-stone-500 leading-relaxed line-clamp-3">
+                {post.data.description}
+              </p>
+              <span class="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-brand-600 uppercase tracking-wider group-hover:text-brand-700 transition-colors">
+                Weiterlesen
+                <svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </span>
+            </article>
+          </a>
+        ))}
+      </div>
+      <a href="/aktuelles" class="sm:hidden inline-flex items-center gap-2 mt-8 text-sm font-semibold text-brand-600">
+        Alle Beiträge &rarr;
+      </a>
+    </div>
+  </section>
+
+  <!-- Clubs CTA -->
+  <section class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center">
+        <div class="lg:col-span-2">
+          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">14 Vereine</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 leading-tight heading-accent">
+            Finde deinen Verein
+          </h2>
+          <p class="mt-6 text-stone-600 leading-relaxed">
+            14 Vereine im Kanton Aargau bieten Judo und Ju-Jitsu für alle Altersklassen an.
+            Finde den passenden Verein in deiner Nähe.
+          </p>
+          <a
+            href="/vereine"
+            class="inline-block mt-8 px-6 py-3 bg-brand-500 text-white text-sm font-semibold tracking-wide rounded-md hover:bg-brand-600 transition-colors"
+          >
+            Vereinsübersicht
+          </a>
+        </div>
+        <div class="lg:col-span-3">
+          <div class="bg-white border border-stone-200 rounded-lg overflow-hidden shadow-sm">
+            <iframe
+              src="https://my.atlist.com/map/bf8016d0-5d2d-4079-9e75-b2a506fb454e?share=true"
+              allow="geolocation 'self' https://my.atlist.com"
+              width="100%"
+              height="380"
+              loading="lazy"
+              frameborder="0"
+              scrolling="no"
+              allowfullscreen
+              class="w-full"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Events CTA -->
+  <section class="relative bg-brand-700 text-white hero-overlay py-20 lg:py-28 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.3em] mb-4">Kalender</p>
+      <h2 class="font-display text-3xl lg:text-5xl font-bold">Veranstaltungen</h2>
+      <p class="mt-5 text-lg text-brand-200 max-w-xl mx-auto leading-relaxed">
+        Wettkämpfe, Trainings und Events — bleib auf dem Laufenden über alle Aktivitäten des AJV.
+      </p>
+      <a
+        href="/veranstaltungen"
+        class="inline-block mt-8 px-8 py-3.5 bg-white text-brand-700 text-sm font-semibold tracking-wide rounded-md hover:bg-stone-100 transition-colors"
+      >
+        Kalender ansehen
+      </a>
+    </div>
+  </section>
+
+</BaseLayout>

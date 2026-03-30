@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Kontakt" description="Kontaktiere den Aargauer Judo und Ju-Jitsu Verband">
+  <!-- Hero -->
+  <section class="relative bg-brand-50 text-stone-900 py-20 lg:py-28 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="animate-fade-up text-brand-600 text-xs font-semibold uppercase tracking-[0.3em] mb-6">
+        Schreib uns
+      </p>
+      <h1 class="animate-fade-up stagger-1 font-display font-extrabold text-4xl sm:text-5xl lg:text-7xl leading-[0.95] tracking-tight text-stone-900">
+        Kontakt
+      </h1>
+      <p class="animate-fade-up stagger-2 mt-6 text-lg text-stone-600 max-w-2xl leading-relaxed">
+        Wir freuen uns über deine Nachricht.
+      </p>
+    </div>
+  </section>
+
+  <!-- Contact Content -->
+  <section class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <!-- Contact Info -->
+        <div>
+          <p class="text-xs font-semibold text-brand-500 uppercase tracking-[0.3em] mb-3">Erreichbarkeit</p>
+          <h2 class="font-display font-bold text-3xl lg:text-4xl text-stone-900 mb-8 heading-accent">Kontaktdaten</h2>
+          <div class="space-y-8">
+            <div>
+              <h3 class="text-sm font-semibold text-stone-900 uppercase tracking-wider">Adresse</h3>
+              <p class="mt-2 text-stone-500 leading-relaxed">
+                Aargauer Judo und Ju-Jitsu Verband<br />
+                Aarburg
+              </p>
+            </div>
+            <div class="w-12 h-0.5 bg-brand-400"></div>
+            <div>
+              <h3 class="text-sm font-semibold text-stone-900 uppercase tracking-wider">E-Mail</h3>
+              <a href="mailto:info@ajv.ag" class="mt-2 inline-block text-brand-500 hover:text-brand-400 transition-colors">
+                info@ajv.ag
+              </a>
+            </div>
+            <div class="w-12 h-0.5 bg-brand-400"></div>
+            <div>
+              <h3 class="text-sm font-semibold text-stone-900 uppercase tracking-wider">Social Media</h3>
+              <a
+                href="https://www.youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-2 inline-flex items-center gap-2 text-brand-500 hover:text-brand-400 transition-colors"
+              >
+                YouTube-Kanal
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div>
+          <p class="text-xs font-semibold text-brand-500 uppercase tracking-[0.3em] mb-3">Formular</p>
+          <h2 class="font-display font-bold text-3xl lg:text-4xl text-stone-900 mb-8 heading-accent">Nachricht senden</h2>
+          <form class="space-y-5" action="https://formspree.io/f/PLACEHOLDER" method="POST">
+            <div>
+              <label for="name" class="block text-sm font-semibold text-stone-700 uppercase tracking-wider mb-2">Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                class="w-full px-4 py-3 rounded-md bg-white border border-stone-200 text-stone-900 focus:border-brand-400 focus:ring-1 focus:ring-brand-400 outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-semibold text-stone-700 uppercase tracking-wider mb-2">E-Mail</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                class="w-full px-4 py-3 rounded-md bg-white border border-stone-200 text-stone-900 focus:border-brand-400 focus:ring-1 focus:ring-brand-400 outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label for="message" class="block text-sm font-semibold text-stone-700 uppercase tracking-wider mb-2">Nachricht</label>
+              <textarea
+                id="message"
+                name="message"
+                rows="5"
+                required
+                class="w-full px-4 py-3 rounded-md bg-white border border-stone-200 text-stone-900 focus:border-brand-400 focus:ring-1 focus:ring-brand-400 outline-none transition-colors resize-y"
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              class="px-6 py-3 rounded-md bg-stone-900 text-white text-sm font-semibold tracking-wide hover:bg-stone-800 transition-colors"
+            >
+              Absenden
+            </button>
+            <p class="text-xs text-stone-400">
+              Formular-Service (Formspree) muss noch konfiguriert werden.
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

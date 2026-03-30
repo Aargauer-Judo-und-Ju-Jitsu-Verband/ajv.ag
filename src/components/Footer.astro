@@ -1,0 +1,50 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="bg-brand-900 text-brand-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-12">
+      <div class="max-w-sm">
+        <img src="/images/logo/ajv_logo.webp" alt="AJV Logo" class="h-10 w-auto brightness-0 invert opacity-70" />
+        <p class="mt-4 text-sm leading-relaxed text-brand-300/70">
+          Förderung und Entwicklung von Judo und Ju-Jitsu im Kanton Aargau seit 1963.
+        </p>
+        <div class="mt-5 flex items-center gap-4">
+          <img src="/images/sponsors/swisslos-sportfonds.webp" alt="Swisslos Sportfonds" class="h-8 w-auto opacity-40" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-12 lg:gap-16">
+        <div>
+          <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.2em] mb-4">Navigation</p>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="/verband" class="hover:text-white transition-colors">Verband</a></li>
+            <li><a href="/aktuelles" class="hover:text-white transition-colors">Aktuelles</a></li>
+            <li><a href="/vereine" class="hover:text-white transition-colors">Vereine</a></li>
+            <li><a href="/veranstaltungen" class="hover:text-white transition-colors">Veranstaltungen</a></li>
+            <li><a href="/vorstand" class="hover:text-white transition-colors">Vorstand</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold text-brand-200 uppercase tracking-[0.2em] mb-4">Kontakt</p>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="mailto:info@ajv.ag" class="hover:text-white transition-colors">info@ajv.ag</a></li>
+            <li><a href="/kontakt" class="hover:text-white transition-colors">Kontaktformular</a></li>
+            <li>
+              <a href="/mitglied-werden" class="text-white font-medium hover:text-brand-200 transition-colors">
+                Mitglied werden
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 pt-6 border-t border-brand-800/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-brand-400/60">
+      <span>&copy; {currentYear} Aargauer Judo und Ju-Jitsu Verband</span>
+      <span>Seit 1963</span>
+    </div>
+  </div>
+</footer>
