@@ -117,6 +117,26 @@ body {
   border-radius: 2px;
 }
 
+/* Floating logo animation for hero background */
+@keyframes heroLogoFloat {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(6px, -10px);
+  }
+  50% {
+    transform: translate(-4px, -6px);
+  }
+  75% {
+    transform: translate(8px, 4px);
+  }
+}
+
+.hero-logo-float {
+  animation: heroLogoFloat 20s ease-in-out infinite;
+}
+
 /* Selection color */
 ::selection {
   background: var(--color-brand-200);
