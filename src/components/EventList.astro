@@ -6,8 +6,8 @@ interface Props {
 
 const { maxEvents = 6, compact = false } = Astro.props;
 
-const CALENDAR_ID = 'c_9695f6e9f8b04563d73205e3ae3790163f04850972a668050742844b65df8fb9@group.calendar.google.com';
-const API_KEY = 'REMOVED_CALENDAR_KEY';
+const CALENDAR_ID = import.meta.env.PUBLIC_GOOGLE_CALENDAR_ID || '';
+const API_KEY = import.meta.env.PUBLIC_GOOGLE_CALENDAR_KEY || '';
 const ICAL_URL = `https://calendar.google.com/calendar/ical/${CALENDAR_ID}/public/basic.ics`;
 const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR_ID}`;
 ---
