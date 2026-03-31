@@ -186,40 +186,50 @@ const posts = (await getCollection('blog'))
   <!-- Clubs -->
   <section class="py-20 lg:py-28 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center">
-        <div class="lg:col-span-2">
-          <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">14 Vereine</p>
-          <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 leading-tight heading-accent">
-            Unsere Vereine
-          </h2>
-          <p class="mt-6 text-stone-600 leading-relaxed">
-            14 Vereine im Kanton Aargau bieten Judo und Ju-Jitsu für alle Altersklassen an.
-          </p>
-          <a
-            href="/vereine"
-            class="inline-flex items-center gap-2 mt-8 text-sm font-semibold text-brand-600 tracking-wide hover:text-brand-700 transition-colors group"
-          >
-            Vereinsübersicht
-            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
-        </div>
-        <div class="lg:col-span-3">
-          <div class="bg-white border border-stone-200 rounded-lg overflow-hidden shadow-sm">
-            <iframe
-              src="https://my.atlist.com/map/bf8016d0-5d2d-4079-9e75-b2a506fb454e?share=true"
-              allow="geolocation 'self' https://my.atlist.com"
-              width="100%"
-              height="380"
-              loading="lazy"
-              frameborder="0"
-              scrolling="no"
-              allowfullscreen
-              class="w-full"
-            ></iframe>
-          </div>
-        </div>
+      <div class="text-center">
+        <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">14 Vereine</p>
+        <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">
+          Unsere Vereine
+        </h2>
+        <p class="mt-4 text-stone-600 leading-relaxed max-w-xl mx-auto">
+          14 Vereine im Kanton Aargau bieten Judo und Ju-Jitsu für alle Altersklassen an.
+        </p>
+      </div>
+      <div class="mt-12 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-6 lg:gap-8 items-center justify-items-center">
+        {[
+          { name: 'JJC Aarau', logo: '/images/clubs/aarau.webp' },
+          { name: 'JC Baden-Wettingen', logo: '/images/clubs/baden-wettingen.webp' },
+          { name: 'JJJC Brugg', logo: '/images/clubs/brugg.webp' },
+          { name: 'JC Bad Zurzach', logo: '/images/clubs/bad-zurzach.webp' },
+          { name: 'Bushido Frick', logo: '/images/clubs/bushido-frick.webp' },
+          { name: 'JC Arashi Kulm', logo: '/images/clubs/arashi-kulm.webp' },
+          { name: 'Aikido- und Judoschule Lenzburg', logo: '/images/clubs/lenzburg.webp' },
+          { name: 'JC Magden', logo: '/images/clubs/magden.webp' },
+          { name: 'JJJC Möhlin', logo: '/images/clubs/moehlin.webp' },
+          { name: 'Movimento Wohlen', logo: '/images/clubs/movimento-wohlen.webp' },
+          { name: 'JC Muri', logo: '/images/clubs/muri.webp' },
+          { name: 'JC Reinach AG', logo: '/images/clubs/reinach.webp' },
+          { name: 'Judo und SVC Rothrist', logo: '/images/clubs/rothrist.webp' },
+          { name: 'JAC Wohlen', logo: '/images/clubs/jac-wohlen.webp' },
+        ].map((club) => (
+          <img
+            src={club.logo}
+            alt={club.name}
+            title={club.name}
+            class="h-12 lg:h-14 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+          />
+        ))}
+      </div>
+      <div class="mt-10 text-center">
+        <a
+          href="/vereine"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 tracking-wide hover:text-brand-700 transition-colors group"
+        >
+          Alle Vereine ansehen
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
       </div>
     </div>
   </section>
