@@ -28,16 +28,16 @@ const posts = (await getCollection('blog'))
         </p>
         <div class="animate-fade-up stagger-3 mt-10 flex flex-wrap gap-4">
           <a
-            href="/veranstaltungen"
+            href="/aktuelles"
             class="px-6 py-3 bg-white text-brand-700 font-semibold text-sm tracking-wide rounded-md hover:bg-stone-100 transition-colors"
           >
-            Veranstaltungen
+            Aktuelles
           </a>
           <a
-            href="/mitglied-werden"
+            href="/kantonalkader"
             class="px-6 py-3 bg-brand-500 text-white font-semibold text-sm tracking-wide rounded-md hover:bg-brand-400 transition-colors border border-brand-400/30"
           >
-            Mitglied werden
+            Kantonalkader
           </a>
         </div>
       </div>
@@ -197,9 +197,12 @@ const posts = (await getCollection('blog'))
           </p>
           <a
             href="/vereine"
-            class="inline-block mt-8 px-6 py-3 bg-brand-500 text-white text-sm font-semibold tracking-wide rounded-md hover:bg-brand-600 transition-colors"
+            class="inline-flex items-center gap-2 mt-8 text-sm font-semibold text-brand-600 tracking-wide hover:text-brand-700 transition-colors group"
           >
             Vereinsübersicht
+            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </a>
         </div>
         <div class="lg:col-span-3">
@@ -234,7 +237,7 @@ const posts = (await getCollection('blog'))
           Als Mitglied des Schweizerischen Judo & Ju-Jitsu Verbands (SJV) fördern wir den Sport auf
           allen Ebenen — vom Breitensport bis zum Spitzensport.
         </p>
-        <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <div class="mt-8 flex flex-wrap justify-center gap-6">
           <a
             href="/verband"
             class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 tracking-wide hover:text-brand-700 transition-colors group"
@@ -244,7 +247,6 @@ const posts = (await getCollection('blog'))
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>
-          <span class="text-stone-300">|</span>
           <a
             href="/vorstand"
             class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 tracking-wide hover:text-brand-700 transition-colors group"
@@ -270,6 +272,22 @@ const posts = (await getCollection('blog'))
           </div>
         ))}
       </div>
+    </div>
+  </section>
+
+  <!-- Kontakt CTA -->
+  <section class="relative bg-brand-700 text-white hero-overlay py-16 lg:py-20 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div>
+        <h2 class="font-display text-2xl lg:text-3xl font-bold">Fragen zum AJV?</h2>
+        <p class="mt-2 text-brand-200 leading-relaxed">Wir helfen gerne weiter — melde dich bei uns.</p>
+      </div>
+      <a
+        href="/kontakt"
+        class="flex-shrink-0 px-6 py-3 bg-white text-brand-700 text-sm font-semibold tracking-wide rounded-md hover:bg-stone-100 transition-colors"
+      >
+        Kontakt aufnehmen
+      </a>
     </div>
   </section>
 
