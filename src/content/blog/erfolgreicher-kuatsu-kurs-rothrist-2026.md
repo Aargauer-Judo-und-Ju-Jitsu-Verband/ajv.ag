@@ -3,6 +3,8 @@ title: "Erfolgreicher Kuatsu-Kurs im Dojo des JSVC Rothrist"
 date: 2026-05-02
 description: "Unter dem Patronat des AJV fand am 2. Mai im Dojo des JSVC Rothrist ein intensiver Kuatsu-Kurs mit 28 Teilnehmenden aus der Deutsch- und Westschweiz statt."
 category: "Kurse"
+image: "../../assets/images/blog/kuatsu-rothrist-2026.jpg"
+imageAlt: "Lea Noseda erklärt den Teilnehmenden im Dojo des JSVC Rothrist die Kuatsu-Theorie"
 ---
 
 Am 02. Mai fand im Dojo des JSVC Rothrist ein intensiver und praxisnaher Kuatsu-Kurs unter der Leitung von Lea Noseda und Deepak Santschi statt. Engagierte Unterstützung erhielten die beiden Kuatsu-Instruktoren durch ihren Kollegen Lukas Aggeler. Der Kurs wurde unter dem Patronat des Aargauischen Judo- und Ju-Jitsu-Verbandes (AJV) durchgeführt. Insgesamt nahmen 28 Teilnehmerinnen und Teilnehmer aus der Deutsch- und Westschweiz teil, was das breite Interesse an diesem wichtigen Thema eindrücklich aufzeigt.
