@@ -3,7 +3,7 @@ title: "Erfolgreicher Kuatsu-Kurs im Dojo des JSVC Rothrist"
 date: 2026-05-02
 description: "Unter dem Patronat des AJV fand am 2. Mai im Dojo des JSVC Rothrist ein intensiver Kuatsu-Kurs mit 28 Teilnehmenden aus der Deutsch- und Westschweiz statt."
 category: "Kurse"
-image: "../../assets/images/blog/kuatsu-rothrist-2026.jpg"
+image: "../../assets/images/blog/kuatsu-rothrist-2026.webp"
 imageAlt: "Lea Noseda erklärt den Teilnehmenden im Dojo des JSVC Rothrist die Kuatsu-Theorie"
 ---
 
