@@ -3,16 +3,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 const contacts = [
   {
-    role: 'Präsident',
-    name: 'Andreas Schmid',
-    image: '/images/board/andreas-schmid.webp',
+    role: 'Allgemeine Anfragen',
+    people: [
+      { name: 'Andreas Schmid', subRole: 'Präsident', image: '/images/board/andreas-schmid.webp' },
+      { name: 'Rahel Kuhn', subRole: 'Aktuarin', image: '/images/board/rahel-kuhn.webp' },
+    ],
     email: 'info@ajv.ag',
     desc: 'Allgemeine Anfragen an den Verband',
   },
   {
     role: 'Kantonalkader',
-    name: 'Jenny Gal',
-    image: '/images/board/jenny-gal.webp',
+    people: [
+      { name: 'Jenny Gal', subRole: 'Vertreterin Kantonalkader', image: '/images/board/jenny-gal.webp' },
+    ],
     email: 'kantonalkader@gmail.com',
     desc: 'Stützpunkttraining, Probetraining, Kader-Fragen',
   },
@@ -41,28 +44,39 @@ const contacts = [
       <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Ansprechpersonen</p>
       <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Direkter Kontakt</h2>
       <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {contacts.map((person) => (
+        {contacts.map((contact) => (
           <div class="bg-white border border-stone-200 rounded-lg p-6 lg:p-8 card-hover">
             <div class="flex items-start gap-5">
-              <div class="w-16 h-16 flex-shrink-0 overflow-hidden rounded-full bg-stone-200">
-                <img
-                  src={person.image}
-                  alt={person.name}
-                  class="w-full h-full object-cover"
-                />
+              <div class="flex-shrink-0 flex -space-x-3">
+                {contact.people.map((person) => (
+                  <div class="w-16 h-16 overflow-hidden rounded-full bg-stone-200 ring-2 ring-white">
+                    <img
+                      src={person.image}
+                      alt={person.name}
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
               </div>
               <div>
-                <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.2em]">{person.role}</p>
-                <h3 class="mt-1 font-display text-xl font-semibold text-stone-900">{person.name}</h3>
-                <p class="mt-1 text-sm text-stone-500">{person.desc}</p>
+                <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.2em]">{contact.role}</p>
+                <h3 class="mt-1 font-display text-xl font-semibold text-stone-900">
+                  {contact.people.map((person, i) => (
+                    <span>
+                      {person.name}
+                      {i < contact.people.length - 1 && <span class="text-stone-400"> · </span>}
+                    </span>
+                  ))}
+                </h3>
+                <p class="mt-1 text-sm text-stone-500">{contact.desc}</p>
                 <a
-                  href={`mailto:${person.email}`}
+                  href={`mailto:${contact.email}`}
                   class="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  {person.email}
+                  {contact.email}
                 </a>
               </div>
             </div>
@@ -144,8 +158,9 @@ const contacts = [
               <h3 class="font-display font-semibold text-stone-900 mb-2">Postadresse</h3>
               <p class="text-stone-500 leading-relaxed">
                 Judo und Ju-Jitsu Verband Aargau<br />
-                Landhausstrasse 7<br />
-                4663 Aarburg
+                c/o Rahel Kuhn (Aktuarin)<br />
+                Kirchenfeldstrasse 26<br />
+                5630 Muri
               </p>
             </div>
             <div class="bg-stone-50 border border-stone-200 rounded-lg p-6">
@@ -153,6 +168,9 @@ const contacts = [
               <a href="mailto:info@ajv.ag" class="text-brand-600 hover:text-brand-700 transition-colors font-semibold">
                 info@ajv.ag
               </a>
+              <p class="mt-2 text-sm text-stone-500 leading-relaxed">
+                Geht an Aktuarin Rahel Kuhn und Präsident Andreas Schmid.
+              </p>
             </div>
             <div class="bg-stone-50 border border-stone-200 rounded-lg p-6">
               <h3 class="font-display font-semibold text-stone-900 mb-3">Links</h3>
