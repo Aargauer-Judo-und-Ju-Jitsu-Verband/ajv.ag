@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import OrganizationSchema from '../components/seo/OrganizationSchema.astro';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import EventList from '../components/EventList.astro';
@@ -9,7 +10,11 @@ const posts = (await getCollection('blog'))
   .slice(0, 3);
 ---
 
-<BaseLayout title="Startseite" description="Aargauer Judo und Ju-Jitsu Verband - Wir fördern Judo und Ju-Jitsu im Kanton Aargau seit 1963.">
+<BaseLayout
+  title="Startseite"
+  description="Aargauer Judo und Ju-Jitsu Verband (AJV) — der Dachverband für Judo und Ju-Jitsu im Kanton Aargau. 14 Vereine, Kantonalkader und Wettkämpfe seit 1963."
+>
+  <OrganizationSchema slot="head" />
 
   <!-- Hero -->
   <section class="relative bg-brand-700 text-white clip-diagonal hero-overlay overflow-hidden">

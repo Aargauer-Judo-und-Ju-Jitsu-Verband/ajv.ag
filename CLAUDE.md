@@ -42,31 +42,70 @@ DESIGN.md                    — design system documentation
 
 ## Common AI Tasks
 
-### Add a blog post
-Create a new `.md` file in `src/content/blog/` with frontmatter:
+For most content tasks there is a slash command (skill). Prefer using those — they include the SEO-relevant steps:
+
+| Aufgabe                            | Slash Command         |
+|------------------------------------|-----------------------|
+| Neuen Blogpost erstellen           | `/new-blog-post`      |
+| Vereins-Daten ändern               | `/update-clubs`       |
+| Vorstandsmitglied ändern           | `/update-board`       |
+| Title/Description einer Seite      | `/update-page-meta`   |
+| SEO-Audit (eine oder alle Seiten)  | `/seo-check`          |
+
+### Manuelle Quick-Reference
+
+**Blogpost** — `.md` in `src/content/blog/` mit frontmatter:
 ```md
 ---
 title: "Post Title"
 date: 2026-03-30
-description: "Short description"
+description: "120–160 Zeichen, mit Keywords (AJV, Judo, Ju-Jitsu, Aargau, ...)"
+category: "Kurse"
+image: "../../assets/images/blog/<slug>.webp"
+imageAlt: "Beschreibung des Bildes"
 ---
-Content here...
+```
+Bilder: WebP, max 1200px, in `src/assets/images/blog/`. Wird automatisch als OG-Bild verwendet.
+
+**Vereine** — `clubs` array in `src/pages/vereine.astro` UND Logo-Listen in `src/pages/index.astro`.
+
+**Vorstand** — `board` und `honorary` arrays in `src/pages/vorstand.astro`. Fotos quadratisch 400×400 WebP in `public/images/board/`.
+
+**Navigation** — `navItems` in `src/components/Header.astro`.
+
+**Styles/Design** — `DESIGN.md` und Theme-Farben in `src/styles/global.css`.
+
+## SEO Architecture
+
+Alle Seiten benutzen `BaseLayout.astro`, der automatisch erzeugt:
+- `<title>` als `"<page-title> | Aargauer Judo und Ju-Jitsu Verband"` (Startseite ist Sonderfall)
+- `<meta name="description">`, `<link rel="canonical">`
+- Open Graph Tags (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:locale`)
+- Twitter Card Tags
+- `theme-color`, `apple-touch-icon`, `<link rel="sitemap">`
+
+**Props an `BaseLayout`:**
+- `title` (Pflicht), `description`
+- `ogImage` — Pfad relativ zur Site, default `/images/og/ajv-default.webp`
+- `ogType` — `'website'` (default) oder `'article'`
+- `publishedTime`, `modifiedTime` — ISO-Strings, nur bei `ogType="article"`
+- `noindex` — boolean, um eine Seite aus Suchmaschinen auszuschliessen
+
+**Strukturierte Daten (JSON-LD):** Komponenten in `src/components/seo/`:
+- `OrganizationSchema.astro` — auf Startseite, `SportsOrganization` Schema
+- `ArticleSchema.astro` — auf Blogposts, `NewsArticle` Schema (wird in `[id].astro` automatisch verwendet)
+- `BreadcrumbSchema.astro` — verfügbar für Breadcrumb-Listen
+
+Eingefügt via Named Slot `head`:
+```astro
+<BaseLayout title="..." description="...">
+  <OrganizationSchema slot="head" />
+</BaseLayout>
 ```
 
-### Update club information
-Edit the `clubs` array in `src/pages/vereine.astro`.
-
-### Update board members
-Edit the `board` array in `src/pages/vorstand.astro`.
-
-### Change page content
-Edit the corresponding `.astro` file in `src/pages/`.
-
-### Update navigation
-Edit `navItems` in `src/components/Header.astro`.
-
-### Update styles/design
-See `DESIGN.md` for the design system. Theme colors are in `src/styles/global.css`.
+**Sitemap:** automatisch generiert via `@astrojs/sitemap` unter `/sitemap-index.xml`.
+**Robots:** `public/robots.txt` verweist auf den Sitemap.
+**Default OG-Image:** `public/images/og/ajv-default.webp` (1140×641, sollte eines Tages durch ein dediziertes 1200×630-Bild ersetzt werden).
 
 ## Deployment
 Push to main branch → Netlify auto-deploys.

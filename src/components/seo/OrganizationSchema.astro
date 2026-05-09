@@ -1,0 +1,32 @@
+---
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'SportsOrganization',
+  name: 'Aargauer Judo und Ju-Jitsu Verband',
+  alternateName: 'AJV',
+  url: 'https://ajv.ag',
+  logo: 'https://ajv.ag/images/logo/ajv_logo.webp',
+  description: 'Der offizielle Verband der Judo- und Ju-Jitsu-Vereine im Kanton Aargau. Mitglied des Schweizerischen Judo & Ju-Jitsu Verbands (SJV).',
+  foundingDate: '1963',
+  sport: ['Judo', 'Ju-Jitsu'],
+  areaServed: {
+    '@type': 'AdministrativeArea',
+    name: 'Kanton Aargau',
+    containedInPlace: {
+      '@type': 'Country',
+      name: 'Schweiz',
+    },
+  },
+  parentOrganization: {
+    '@type': 'SportsOrganization',
+    name: 'Schweizerischer Judo & Ju-Jitsu Verband',
+    alternateName: 'SJV',
+    url: 'https://www.sjv.ch',
+  },
+  sameAs: [
+    'https://www.sjv.ch',
+  ],
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} is:inline />
