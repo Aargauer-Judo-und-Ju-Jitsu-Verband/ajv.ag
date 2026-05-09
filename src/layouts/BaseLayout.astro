@@ -6,9 +6,37 @@ import Footer from '../components/Footer.astro';
 interface Props {
   title: string;
   description?: string;
+  /** Optional path to a page-specific OG image (relative to site root, e.g. "/images/events/foo.webp"). Defaults to the site-wide image. */
+  ogImage?: string;
+  /** OG type — "website" for normal pages, "article" for blog posts. */
+  ogType?: 'website' | 'article';
+  /** ISO date string — required when ogType is "article". */
+  publishedTime?: string;
+  /** ISO date string — optional, only for articles that have been updated. */
+  modifiedTime?: string;
+  /** Set to true to exclude this page from search engine indexing. */
+  noindex?: boolean;
 }
 
-const { title, description = 'Aargauer Judo und Ju-Jitsu Verband - Seit 1963' } = Astro.props;
+const {
+  title,
+  description = 'Aargauer Judo und Ju-Jitsu Verband — wir fördern Judo und Ju-Jitsu im Kanton Aargau seit 1963.',
+  ogImage = '/images/og/ajv-default.webp',
+  ogType = 'website',
+  publishedTime,
+  modifiedTime,
+  noindex = false,
+} = Astro.props;
+
+const SITE_NAME = 'Aargauer Judo und Ju-Jitsu Verband';
+const SITE_URL = 'https://ajv.ag';
+
+const fullTitle = title === 'Startseite'
+  ? `${SITE_NAME} | Judo & Ju-Jitsu im Aargau`
+  : `${title} | ${SITE_NAME}`;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).toString();
+const ogImageURL = new URL(ogImage, Astro.site ?? SITE_URL).toString();
 ---
 
 <!doctype html>
@@ -16,13 +44,51 @@ const { title, description = 'Aargauer Judo und Ju-Jitsu Verband - Seit 1963' } 
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/webp" href="/favicon.webp" />
+    <link rel="apple-touch-icon" href="/favicon.webp" />
+    <meta name="theme-color" content="#7d2828" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:alt" content={`${SITE_NAME} — Logo`} />
+    <meta property="og:locale" content="de_CH" />
+    {ogType === 'article' && publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )}
+    {ogType === 'article' && modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime} />
+    )}
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
+    <!-- Sitemap auto-discovery -->
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
-    <title>{title} | AJV</title>
+
+    <slot name="head" />
   </head>
   <body class="min-h-screen flex flex-col">
     <Header />

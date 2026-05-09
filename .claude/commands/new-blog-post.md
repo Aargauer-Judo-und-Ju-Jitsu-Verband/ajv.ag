@@ -1,20 +1,20 @@
 # Create a New Blog Post
 
-Create a new blog post for the AJV website based on the user's input: $ARGUMENTS
+Create a new SEO-optimized blog post for the AJV website based on the user's input: $ARGUMENTS
 
 ## Steps
 
 ### 1. Gather information
 From the user's input, determine:
-- **Title** (German)
+- **Title** (German) — clear, descriptive, ideally with a relevant keyword (z. B. "Aargauer Einzelmeisterschaft Judo 2026", nicht "Bericht zur AEM")
 - **Date** (publication date, use today if not specified)
-- **Description** (1-2 sentence German summary)
-- **Category** (e.g. "Kurse", "Events", "Wettkampf", "Verband")
-- **Image** (file path if provided)
-- **Image alt text** (German, descriptive)
-- **Content** (the blog post body in German)
+- **Description** (1–2 sentence German summary, **120–160 Zeichen** — wird als Meta-Description und in Social Previews angezeigt; muss eigenständig verständlich sein und Schlüsselwörter enthalten wie "AJV", "Judo", "Ju-Jitsu", "Aargau", konkrete Vereine/Orte/Personen)
+- **Category** (z. B. "Kurse", "Wettkampf", "Verband", "Nachwuchs")
+- **Image** (Pflicht für gute Social-Media-Vorschauen — falls nicht geliefert, beim User nachfragen)
+- **Image alt text** (Deutsch, beschreibend — was ist auf dem Bild zu sehen, nicht nur "Foto vom Kurs")
+- **Content** (Blog-Body in Deutsch)
 
-If any critical information is missing (especially title and content), ask the user before proceeding.
+If any critical information is missing (especially title, description and content), ask the user before proceeding.
 
 ### 2. Optimize the image (if provided)
 If the user provides an image file path:
@@ -24,12 +24,14 @@ If the user provides an image file path:
    ```bash
    magick <source-image> -resize 1200x -quality 80 src/assets/images/blog/<slug>.webp
    ```
-   - Max width: **1200px** (sufficient for 960px detail view + retina)
+   - Max width: **1200px** (sufficient for 960px detail view + retina + Open Graph)
    - Format: **WebP**
    - Quality: **80**
-   - Filename: use a descriptive kebab-case slug matching the post, e.g. `kuatsu-rothrist-2026.webp`
+   - Filename: descriptive kebab-case slug matching the post, e.g. `kuatsu-rothrist-2026.webp`
 3. Verify the output file was created and report the size savings
 4. Do NOT keep the original file in `src/assets/images/blog/` — only the optimized WebP
+
+**Why the image matters:** Das erste Bild im Blogpost wird automatisch als Open-Graph-Bild verwendet (für WhatsApp-, Facebook-, LinkedIn-Vorschauen) und im JSON-LD `Article`-Schema referenziert. Ohne Bild → schlechte Social-Media-Vorschau.
 
 ### 3. Create the blog post file
 Create a new `.md` file in `src/content/blog/` with this structure:
@@ -38,31 +40,34 @@ Create a new `.md` file in `src/content/blog/` with this structure:
 ---
 title: "<title>"
 date: <YYYY-MM-DD>
-description: "<description>"
+description: "<description, 120–160 Zeichen, mit Keywords>"
 category: "<category>"
 image: "../../assets/images/blog/<image-filename>.webp"
-imageAlt: "<alt text>"
+imageAlt: "<alt text, beschreibend, mit Personen/Orten wenn relevant>"
 ---
 
 <content in German, using proper paragraphs>
 ```
 
-**File naming:** Use a descriptive kebab-case slug, e.g. `erfolgreicher-kuatsu-kurs-rothrist-2026.md`
+**File naming:** descriptive kebab-case slug (wird zur URL `/aktuelles/<slug>/`). Wähle einen Slug, der auch in 5 Jahren noch Sinn ergibt — Jahreszahl bei wiederkehrenden Events einfügen, z. B. `aem-judo-jujitsu-2026.md` statt `aem-2026.md`.
 
 **Important:**
-- All content must be in **German**
-- The image path must be relative: `../../assets/images/blog/<filename>.webp`
-- Omit `image` and `imageAlt` fields entirely if no image is provided
-- Omit `category` if not applicable
+- Alle Inhalte auf **Deutsch**
+- Bildpfad relativ: `../../assets/images/blog/<filename>.webp`
+- `image` und `imageAlt` weglassen, falls kein Bild vorhanden — aber dann den User auf den SEO-Nachteil hinweisen
+- `category` weglassen falls nicht zutreffend
+- Im Body: erste H2-Überschrift sollte das Hauptkeyword enthalten (z. B. "Erfolgreicher Kuatsu-Kurs in Rothrist" statt "Einleitung")
 
 ### 4. Verify the build
-Run `npm run build` to ensure:
-- The blog post is generated at `/aktuelles/<slug>/`
-- The image is optimized by Astro's build pipeline
-- No build errors occur
+Run `npm run build` and check:
+- Blog post wird unter `/aktuelles/<slug>/` generiert
+- Bild wird durch Astro's Image-Pipeline optimiert (WebP-Varianten)
+- Keine Build-Fehler
+- (Optional) `dist/aktuelles/<slug>/index.html` prüfen: enthält `og:type=article`, `article:published_time`, `application/ld+json` mit `NewsArticle`
 
 ### 5. Report results
-Summarize what was created:
-- Blog post file path and URL
-- Image optimization results (original size → WebP size → Astro build size)
-- Confirm successful build
+Summarize:
+- Pfad und URL des Blogposts
+- Bildoptimierungs-Resultat (Original → WebP → Astro Build)
+- Build-Erfolg bestätigt
+- Hinweis falls Description oder Bild fehlen (SEO-Schwachstellen)

@@ -1,0 +1,42 @@
+---
+interface Props {
+  headline: string;
+  description: string;
+  datePublished: string;
+  dateModified?: string;
+  image?: string;
+  url: string;
+}
+
+const { headline, description, datePublished, dateModified, image, url } = Astro.props;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'NewsArticle',
+  headline,
+  description,
+  datePublished,
+  dateModified: dateModified ?? datePublished,
+  ...(image && { image: [image] }),
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': url,
+  },
+  author: {
+    '@type': 'Organization',
+    name: 'Aargauer Judo und Ju-Jitsu Verband',
+    url: 'https://ajv.ag',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Aargauer Judo und Ju-Jitsu Verband',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://ajv.ag/images/logo/ajv_logo.webp',
+    },
+  },
+  inLanguage: 'de-CH',
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} is:inline />
