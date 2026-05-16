@@ -2,11 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const clubs = [
-  { name: 'JJC Aarau', location: '5000 Aarau', phone: '062 824 33 66', website: 'http://www.jjjcaarau.ch/', logo: '/images/clubs/aarau.webp' },
+  { name: 'JJC Aarau', address: 'Delfstrasse 44', location: '5000 Aarau', phone: '062 824 33 66', website: 'http://www.jjjcaarau.ch/', logo: '/images/clubs/aarau.webp' },
   { name: 'JC Baden-Wettingen', location: 'Baden-Wettingen', email: 'info@jcbw.ch', website: 'http://www.jcbw.ch/', logo: '/images/clubs/baden-wettingen.webp' },
   { name: 'JJJC Brugg', location: 'Brugg', website: 'http://www.jjjcbrugg.ch/', logo: '/images/clubs/brugg.webp' },
   { name: 'JC Bad Zurzach', location: 'Bad Zurzach', phone: '+41 79 578 35 87', email: 'info@jcbz.ch', website: 'http://www.jcbz.ch/', logo: '/images/clubs/bad-zurzach.webp' },
-  { name: 'Bushido Frick', location: '5075 Hornussen', phone: '+41 79 912 92 66', email: 'd.landis@ffn.ch', website: 'https://bushido-frick.ch/', logo: '/images/clubs/bushido-frick.webp' },
+  { name: 'Bushido Frick', address: 'Gänsacker 12B', location: '5070 Frick', phone: '+41 76 202 92 66', email: 'dlandis86@gmail.com', website: 'https://bushido-frick.ch/', logo: '/images/clubs/bushido-frick.webp' },
   { name: 'Judo Club Arashi Kulm', location: '5722 Gränichen', phone: '+41 79 793 74 28', website: 'http://www.judo-kulm.ch/', logo: '/images/clubs/arashi-kulm.webp' },
   { name: 'Aikido- und Judoschule Lenzburg', location: '5600 Lenzburg', phone: '062 892 39 70', website: 'http://www.okami.ch/', logo: '/images/clubs/lenzburg.webp' },
   { name: 'Judo Club Magden', location: '4312 Magden', website: 'https://judoclubmagden.ch/', logo: '/images/clubs/magden.webp' },
@@ -14,7 +14,7 @@ const clubs = [
   { name: 'Movimento Wohlen', location: '5610 Wohlen', phone: '+41 56 621 19 44', email: 'info@movimento-wohlen.ch', website: 'https://www.movimento-wohlen.ch/', logo: '/images/clubs/movimento-wohlen.webp' },
   { name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp' },
   { name: 'Judo Club Reinach AG', location: '4663 Aarburg', phone: '+41 62 791 69 82', email: 'marti.matthias@bluewin.ch', website: 'http://www.judoclub-reinach.ch/', logo: '/images/clubs/reinach.webp' },
-  { name: 'Judo und SVC Rothrist', location: '4852 Rothrist', email: 'praesident@judoclubrothrist.ch', website: 'http://www.judoclubrothrist.ch/', logo: '/images/clubs/rothrist.webp' },
+  { name: 'Judo und SVC Rothrist', address: 'Robert-Barth-Weg 2c', location: '4852 Rothrist', email: 'praesident@judoclubrothrist.ch', website: 'http://www.judoclubrothrist.ch/', logo: '/images/clubs/rothrist.webp' },
   { name: 'Judo und Aikido Club Wohlen', location: '5610 Wohlen', phone: '+41 79 586 72 01', email: 'info@jacwohlen.ch', website: 'https://jacwohlen.ch/', logo: '/images/clubs/jac-wohlen.webp' },
 ];
 ---
@@ -69,12 +69,15 @@ const clubs = [
             </div>
             <div class="w-8 h-0.5 bg-brand-400 mb-4"></div>
             <div class="space-y-2 text-sm text-stone-500">
-              <p class="flex items-center gap-2">
-                <svg class="w-4 h-4 shrink-0 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <p class="flex items-start gap-2">
+                <svg class="w-4 h-4 shrink-0 text-stone-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                {club.location}
+                <span>
+                  {club.address && <>{club.address}<br /></>}
+                  {club.location}
+                </span>
               </p>
               {club.phone && (
                 <p class="flex items-center gap-2">
