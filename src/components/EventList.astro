@@ -2,23 +2,29 @@
 interface Props {
   maxEvents?: number;
   compact?: boolean;
+  showFilters?: boolean;
 }
 
-const { maxEvents = 6, compact = false } = Astro.props;
+const { maxEvents = 6, compact = false, showFilters = false } = Astro.props;
 
 const CALENDAR_ID = import.meta.env.PUBLIC_GOOGLE_CALENDAR_ID || '';
-const API_KEY = import.meta.env.PUBLIC_GOOGLE_CALENDAR_KEY || '';
 const ICAL_URL = `https://calendar.google.com/calendar/ical/${CALENDAR_ID}/public/basic.ics`;
 const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR_ID}`;
 ---
 
 <div
   id="event-list"
-  data-calendar-id={CALENDAR_ID}
-  data-api-key={API_KEY}
   data-max-events={maxEvents}
   data-compact={compact ? 'true' : 'false'}
+  data-show-filters={showFilters ? 'true' : 'false'}
 >
+  {showFilters && (
+    <div id="event-filters" class="hidden mb-6 pb-6 border-b border-stone-200">
+      <p class="text-xs text-stone-400 uppercase tracking-wider font-semibold mb-3">Filter</p>
+      <div id="event-filter-chips" class="flex flex-wrap gap-2"></div>
+    </div>
+  )}
+
   <!-- Loading state -->
   <div id="event-loading" class="flex items-center justify-center py-12">
     <div class="flex items-center gap-3 text-stone-400">
@@ -53,7 +59,7 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
 
   <!-- Subscribe bar -->
   <div id="event-subscribe" class="hidden mt-6 pt-6 border-t border-stone-200 flex flex-wrap items-center gap-3">
-    <span class="text-xs text-stone-400 uppercase tracking-wider font-semibold">Kalender abonnieren</span>
+    <span class="text-xs text-stone-400 uppercase tracking-wider font-semibold">AJV-Kalender abonnieren</span>
     <a
       href={GCAL_SUB_URL}
       target="_blank"
@@ -79,11 +85,12 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
 
 <script>
   const container = document.getElementById('event-list')!;
-  const calendarId = container.dataset.calendarId!;
-  const apiKey = container.dataset.apiKey!;
   const maxEvents = parseInt(container.dataset.maxEvents || '6', 10);
   const isCompact = container.dataset.compact === 'true';
+  const showFilters = container.dataset.showFilters === 'true';
 
+  const filtersEl = document.getElementById('event-filters');
+  const chipsEl = document.getElementById('event-filter-chips');
   const loadingEl = document.getElementById('event-loading')!;
   const errorEl = document.getElementById('event-error')!;
   const itemsEl = document.getElementById('event-items')!;
@@ -92,14 +99,16 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
 
   const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
   const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const STORAGE_KEY = 'ajv-event-filters';
+  const DEFAULT_TAGS = ['AJV'];
+
+  let allEvents: any[] = [];
+  let availableTags: string[] = [];
+  let activeTags: Set<string> = new Set(DEFAULT_TAGS);
 
   function formatTime(dateStr: string): string {
     const d = new Date(dateStr);
     return d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  function isAllDay(event: any): boolean {
-    return !!event.start.date && !event.start.dateTime;
   }
 
   function getStartDate(event: any): Date {
@@ -109,9 +118,9 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
   }
 
   function isMultiDay(event: any): boolean {
-    if (!isAllDay(event)) return false;
+    if (!event.allDay) return false;
     const start = event.start.date;
-    const end = event.end.date;
+    const end = event.end?.date;
     if (!start || !end) return false;
     const [sy, sm, sd] = start.split('-').map(Number);
     const [ey, em, ed] = end.split('-').map(Number);
@@ -123,7 +132,7 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
 
   function formatDateRange(event: any): string {
     const start = getStartDate(event);
-    if (isAllDay(event)) {
+    if (event.allDay) {
       if (isMultiDay(event)) {
         const [ey, em, ed] = event.end.date.split('-').map(Number);
         const endDate = new Date(ey, em - 1, ed - 1);
@@ -138,7 +147,6 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
     return timeStr;
   }
 
-  // Format date as YYYYMMDD or YYYYMMDDTHHmmSSZ for Google Calendar add link
   function toGCalDate(event: any, which: 'start' | 'end'): string {
     const part = which === 'start' ? event.start : event.end;
     if (part.date) {
@@ -179,16 +187,26 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
     return `<div class="mt-1.5 flex flex-wrap gap-3">${links.join('')}</div>`;
   }
 
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  }
+
+  function renderSourceBadge(event: any): string {
+    if (!event.source || event.source === 'AJV') return '';
+    return `<span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500 bg-stone-100 rounded">${escapeHtml(event.source)}</span>`;
+  }
+
   function renderEvent(event: any): string {
     const start = getStartDate(event);
     const day = start.getDate();
     const month = MONTHS[start.getMonth()];
     const weekday = WEEKDAYS[start.getDay()];
-    const title = event.summary || 'Ohne Titel';
-    const location = event.location || '';
+    const title = escapeHtml(event.summary || 'Ohne Titel');
+    const location = escapeHtml(event.location || '');
     const timeInfo = formatDateRange(event);
     const attachmentsHtml = renderAttachments(event.attachments);
     const addUrl = getAddToGCalUrl(event);
+    const sourceBadge = renderSourceBadge(event);
 
     if (isCompact) {
       return `
@@ -231,7 +249,12 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-start justify-between gap-3">
-            <h3 class="font-display font-semibold text-stone-900 leading-snug">${title}</h3>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-display font-semibold text-stone-900 leading-snug">${title}</h3>
+                ${sourceBadge}
+              </div>
+            </div>
             <a
               href="${addUrl}"
               target="_blank"
@@ -252,29 +275,104 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
     `;
   }
 
+  function filterEvents(): any[] {
+    if (activeTags.size === 0) return [];
+    return allEvents.filter((e) => (e.tags || []).some((t: string) => activeTags.has(t)));
+  }
+
+  function countForTag(tag: string): number {
+    return allEvents.filter((e) => (e.tags || []).includes(tag)).length;
+  }
+
+  function renderChips() {
+    if (!chipsEl) return;
+    chipsEl.innerHTML = availableTags
+      .map((tag) => {
+        const count = countForTag(tag);
+        if (count === 0) return '';
+        const active = activeTags.has(tag);
+        const cls = active
+          ? 'bg-brand-600 text-white border-brand-600 hover:bg-brand-700'
+          : 'bg-white text-stone-600 border-stone-200 hover:border-brand-300 hover:text-brand-600';
+        return `
+          <button
+            type="button"
+            data-tag="${escapeHtml(tag)}"
+            class="event-chip inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${cls}"
+          >
+            ${escapeHtml(tag)}
+            <span class="text-[10px] opacity-70">${count}</span>
+          </button>
+        `;
+      })
+      .filter(Boolean)
+      .join('');
+
+    chipsEl.querySelectorAll<HTMLButtonElement>('button.event-chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tag = btn.dataset.tag!;
+        if (activeTags.has(tag)) {
+          activeTags.delete(tag);
+        } else {
+          activeTags.add(tag);
+        }
+        persistFilters();
+        renderChips();
+        renderList();
+      });
+    });
+  }
+
+  function renderList() {
+    const filtered = filterEvents().slice(0, maxEvents);
+    if (filtered.length === 0) {
+      itemsEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+    } else {
+      emptyEl.classList.add('hidden');
+      itemsEl.innerHTML = filtered.map(renderEvent).join('');
+      itemsEl.classList.remove('hidden');
+    }
+  }
+
+  function persistFilters() {
+    if (!showFilters) return;
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify([...activeTags]));
+    } catch {}
+  }
+
+  function loadPersistedFilters() {
+    if (!showFilters) return;
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) activeTags = new Set(parsed);
+      }
+    } catch {}
+  }
+
   async function loadEvents() {
     try {
-      const now = new Date().toISOString();
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&timeMin=${now}&maxResults=${maxEvents}&singleEvents=true&orderBy=startTime&supportsAttachments=true`;
-
-      const res = await fetch(url);
+      const res = await fetch('/api/events');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const data = await res.json();
-      const events = data.items || [];
+      allEvents = data.events || [];
+      availableTags = data.tags || [];
 
       loadingEl.classList.add('hidden');
 
-      if (events.length === 0) {
-        emptyEl.classList.remove('hidden');
-        return;
+      if (showFilters) {
+        loadPersistedFilters();
+        filtersEl?.classList.remove('hidden');
+        renderChips();
       }
 
-      itemsEl.innerHTML = events.map(renderEvent).join('');
-      itemsEl.classList.remove('hidden');
+      renderList();
       subscribeEl.classList.remove('hidden');
     } catch (e) {
-      console.error('Failed to load calendar events:', e);
+      console.error('Failed to load events:', e);
       loadingEl.classList.add('hidden');
       errorEl.classList.remove('hidden');
     }
