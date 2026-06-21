@@ -71,6 +71,8 @@ Bilder: WebP, max 1200px, in `src/assets/images/blog/`. Wird automatisch als OG-
 
 **Vorstand** — `board` und `honorary` arrays in `src/pages/vorstand.astro`. Fotos quadratisch 400×400 WebP in `public/images/board/`.
 
+**Kantonalkader-Termine** — Stützpunkttrainings werden aus einem als CSV veröffentlichten Google Sheet (`PUBLIC_KADER_SHEET_CSV`) zur Build-Zeit in `src/pages/kantonalkader.astro` gelesen. Pflege erfolgt im Sheet; ein nächtlicher Rebuild (`.github/workflows/nightly-rebuild.yml`) übernimmt Änderungen. Details: `docs/kantonalkader-termine.md`.
+
 **Navigation** — `navItems` in `src/components/Header.astro`.
 
 **Styles/Design** — `DESIGN.md` und Theme-Farben in `src/styles/global.css`.
