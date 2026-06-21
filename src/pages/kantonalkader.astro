@@ -3,7 +3,34 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { Image } from 'astro:assets';
 import kaderWeekend from '../assets/images/kantonalkader/kader-weekend-2022.jpg';
 
-const stpH1 = [
+type Status = true | false | 'ersatz';
+interface TrainingRow {
+  date: string;   // 'TT.MM.'
+  training: Status;
+  note: string;
+}
+
+// ---------------------------------------------------------------------------
+// Stützpunkttrainings-Termine
+//
+// Quelle: ein als CSV veröffentlichtes Google Sheet (Spalten: Datum, Status,
+// Bemerkung). Die URL steht in der Umgebungsvariable PUBLIC_KADER_SHEET_CSV.
+// Die Daten werden zur BUILD-ZEIT gelesen (kein CORS, im statischen HTML, gut
+// für SEO). Aktualisierung: Sheet bearbeiten → nächtlicher Rebuild übernimmt
+// die Änderung (siehe docs/kantonalkader-termine.md).
+//
+// Erwartetes CSV-Format (erste Zeile = Kopfzeile):
+//   Datum,Status,Bemerkung
+//   10.01.,kein,
+//   17.01.,training,
+//   07.06.,ersatz,Kantonalkadertraining Rothrist
+//
+// Status-Werte: "training" | "kein" | "ersatz" (Gross-/Kleinschreibung egal).
+// Fällt das Laden aus (URL fehlt oder Sheet nicht erreichbar), werden die
+// unten hinterlegten Fallback-Daten verwendet — der Build bricht nie ab.
+// ---------------------------------------------------------------------------
+
+const fallbackH1: TrainingRow[] = [
   { date: '10.01.', training: false, note: '' },
   { date: '17.01.', training: true, note: '' },
   { date: '24.01.', training: true, note: '' },
@@ -32,7 +59,7 @@ const stpH1 = [
   { date: '27.06.', training: false, note: 'National Education Day' },
 ];
 
-const stpH2 = [
+const fallbackH2: TrainingRow[] = [
   { date: '04.07.', training: true, note: '' },
   { date: '11.07.', training: true, note: '' },
   { date: '18.07.', training: true, note: '' },
@@ -60,6 +87,93 @@ const stpH2 = [
   { date: '19.12.', training: true, note: '' },
   { date: '26.12.', training: false, note: '' },
 ];
+
+// Minimaler CSV-Parser (verarbeitet "..."-gequotete Felder mit Kommas/Zeilenumbrüchen).
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  const t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (t[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      row.push(field); field = '';
+    } else if (c === '\n') {
+      row.push(field); field = '';
+      if (row.some((f) => f.trim() !== '')) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  if (field !== '' || row.length) {
+    row.push(field);
+    if (row.some((f) => f.trim() !== '')) rows.push(row);
+  }
+  return rows;
+}
+
+function normalizeStatus(raw: string): Status {
+  const v = raw.trim().toLowerCase();
+  if (v.includes('ersatz')) return 'ersatz';
+  if (v === 'training' || v === 'ja' || v === 'x') return true;
+  return false;
+}
+
+function monthOf(date: string): number {
+  const m = date.match(/\d{1,2}\.(\d{1,2})\./);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+async function loadSchedule(): Promise<{ h1: TrainingRow[]; h2: TrainingRow[]; live: boolean }> {
+  const url = import.meta.env.PUBLIC_KADER_SHEET_CSV;
+  if (!url) return { h1: fallbackH1, h2: fallbackH2, live: false };
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = parseCsv(await res.text());
+    if (rows.length < 2) throw new Error('CSV leer');
+
+    // Spaltenindizes aus der Kopfzeile bestimmen (sonst positionell 0/1/2).
+    const header = rows[0].map((h) => h.trim().toLowerCase());
+    let di = header.findIndex((h) => h.startsWith('datum'));
+    let si = header.findIndex((h) => h.startsWith('status'));
+    let ni = header.findIndex((h) => h.startsWith('bemerk'));
+    if (di === -1 && si === -1) { di = 0; si = 1; ni = 2; }
+    if (di === -1) di = 0;
+    if (si === -1) si = 1;
+    if (ni === -1) ni = 2;
+
+    const all: TrainingRow[] = rows.slice(1)
+      .map((r) => ({
+        date: (r[di] || '').trim(),
+        training: normalizeStatus(r[si] || ''),
+        note: (r[ni] || '').trim(),
+      }))
+      .filter((r) => /\d{1,2}\.\d{1,2}\./.test(r.date));
+
+    if (all.length === 0) throw new Error('keine gültigen Zeilen');
+
+    return {
+      h1: all.filter((r) => monthOf(r.date) <= 6),
+      h2: all.filter((r) => monthOf(r.date) >= 7),
+      live: true,
+    };
+  } catch (e) {
+    console.warn('[kantonalkader] Sheet konnte nicht geladen werden, Fallback wird verwendet:', e);
+    return { h1: fallbackH1, h2: fallbackH2, live: false };
+  }
+}
+
+const { h1: stpH1, h2: stpH2, live } = await loadSchedule();
+const seasonYear = new Date().getFullYear();
+const standDate = new Date().toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
 ---
 
 <BaseLayout title="Kantonalkader" description="Das Judo-Kantonalkader Aargau – wöchentliches Stützpunkttraining für junge Judoka der Kategorien U11, U13 und U15. Der Weg in den nationalen Leistungssport.">
@@ -168,7 +282,7 @@ const stpH2 = [
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl">
         <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-3">Wöchentlich</p>
-        <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Stützpunkttrainings 2026</h2>
+        <h2 class="font-display text-3xl lg:text-4xl font-bold text-stone-900 heading-accent">Stützpunkttrainings {seasonYear}</h2>
         <div class="mt-6 space-y-4 text-lg text-stone-500 leading-relaxed">
           <p>
             Die Stützpunkttrainings finden jeweils am <strong class="text-stone-700">Samstag Morgen, 10:00–12:00 Uhr</strong> statt, im Dojo des Nationalen Leistungszentrums in Brugg/Windisch.
@@ -207,7 +321,7 @@ const stpH2 = [
       <div class="mt-12 grid md:grid-cols-2 gap-8">
         <div class="bg-white border border-stone-200 rounded-lg overflow-hidden card-hover">
           <div class="px-6 py-4 border-b border-stone-200 bg-stone-50">
-            <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] text-center">Januar – Juni 2026</p>
+            <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] text-center">Januar – Juni {seasonYear}</p>
           </div>
           <table class="w-full text-sm">
             <thead>
@@ -246,7 +360,7 @@ const stpH2 = [
 
         <div class="bg-white border border-stone-200 rounded-lg overflow-hidden card-hover">
           <div class="px-6 py-4 border-b border-stone-200 bg-stone-50">
-            <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] text-center">Juli – Dezember 2026</p>
+            <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] text-center">Juli – Dezember {seasonYear}</p>
           </div>
           <table class="w-full text-sm">
             <thead>
@@ -260,13 +374,17 @@ const stpH2 = [
               {stpH2.map((row) => (
                 <tr class:list={[
                   'border-b border-stone-100',
-                  row.training === true ? '' : 'bg-stone-50 text-stone-400',
+                  row.training === true ? '' : row.training === 'ersatz' ? 'bg-amber-50' : 'bg-stone-50 text-stone-400',
                 ]}>
                   <td class="px-4 py-1.5 tabular-nums">{row.date}</td>
                   <td class="px-4 py-1.5">
                     {row.training === true ? (
                       <span class="inline-flex items-center gap-1 text-green-700 font-medium">
                         <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Training
+                      </span>
+                    ) : row.training === 'ersatz' ? (
+                      <span class="inline-flex items-center gap-1 text-amber-700 font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Ersatz
                       </span>
                     ) : (
                       <span class="text-stone-400">kein Training</span>
@@ -279,7 +397,7 @@ const stpH2 = [
           </table>
         </div>
       </div>
-      <p class="mt-4 text-xs text-stone-400 text-right">Stand: 08.05.2026</p>
+      <p class="mt-4 text-xs text-stone-400 text-right">Stand: {standDate}{live ? '' : ' (Reserveplan)'}</p>
     </div>
   </section>
 

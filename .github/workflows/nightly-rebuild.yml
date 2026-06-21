@@ -1,0 +1,26 @@
+name: Nightly Rebuild
+
+# Stösst einmal pro Nacht einen Netlify-Build an, damit Änderungen am
+# Kantonalkader-Google-Sheet (PUBLIC_KADER_SHEET_CSV) automatisch auf die
+# Live-Seite übernommen werden. Die Build-Hook-URL liegt als Repository-Secret
+# NETLIFY_BUILD_HOOK_URL (Netlify: Site configuration → Build & deploy →
+# Build hooks → neuen Hook erstellen).
+
+on:
+  schedule:
+    # 02:00 UTC ≈ 03:00/04:00 Uhr Schweizer Zeit
+    - cron: '0 2 * * *'
+  workflow_dispatch: {}   # erlaubt manuelles Auslösen über den Actions-Tab
+
+jobs:
+  trigger-netlify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify build hook
+        run: |
+          if [ -z "${{ secrets.NETLIFY_BUILD_HOOK_URL }}" ]; then
+            echo "::error::Secret NETLIFY_BUILD_HOOK_URL ist nicht gesetzt."
+            exit 1
+          fi
+          curl -fsS -X POST -d '{}' "${{ secrets.NETLIFY_BUILD_HOOK_URL }}"
+          echo "Netlify-Build ausgelöst."
