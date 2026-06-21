@@ -1,0 +1,29 @@
+name: Kalender-Rebuild
+
+# Stösst täglich einen Netlify-Deploy an, damit die Veranstaltungsseite die
+# aktuellen Termine aus dem Webling-iCal-Feed neu lädt (die werden beim Build
+# gelesen). Zusätzlich manuell auslösbar über den "Run workflow"-Button.
+#
+# Voraussetzung: Repository-Secret NETLIFY_BUILD_HOOK mit der URL eines
+# Netlify Build Hooks (siehe Einrichtungsanleitung).
+
+on:
+  schedule:
+    # täglich um 04:00 UTC (~05:00/06:00 Schweizer Zeit)
+    - cron: '0 4 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  trigger-netlify-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Netlify Build Hook auslösen
+        run: |
+          if [ -z "${NETLIFY_BUILD_HOOK}" ]; then
+            echo "::error::Secret NETLIFY_BUILD_HOOK ist nicht gesetzt."
+            exit 1
+          fi
+          curl -fsS -X POST -d '{}' "${NETLIFY_BUILD_HOOK}"
+          echo "Netlify-Build ausgelöst."
+        env:
+          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
