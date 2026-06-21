@@ -27,7 +27,7 @@ src/
     verband.astro            — about the association
     aktuelles.astro          — news/blog listing
     vereine.astro            — clubs directory
-    veranstaltungen.astro    — events (Google Calendar embed)
+    veranstaltungen.astro    — events (Webling iCal feed, build-time)
     vorstand.astro           — board members
     kontakt.astro            — contact page with form
     mitglied-werden.astro    — membership info
