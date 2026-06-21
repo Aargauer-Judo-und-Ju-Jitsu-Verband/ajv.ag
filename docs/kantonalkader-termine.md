@@ -32,16 +32,22 @@ Google Sheet  ──(als CSV veröffentlicht)──►  Astro liest beim Build  
 **Format** (erste Zeile = Kopfzeile, Spaltenreihenfolge frei, solange die
 Überschriften passen):
 
-| Datum  | Status   | Bemerkung                         |
-|--------|----------|-----------------------------------|
-| 10.01. | kein     |                                   |
-| 17.01. | training |                                   |
-| 07.06. | ersatz   | Kantonalkadertraining Rothrist    |
-| 15.08. | kein     | Kantonalkaderweekend              |
+| Datum      | Status        | Bemerkung                      |
+|------------|---------------|--------------------------------|
+| 10/1/2026  | kein Training |                                |
+| 17/1/2026  | Training      |                                |
+| 7/6/2026   | Ersatz        | Kantonalkadertraining Rothrist |
+| 15/8/2026  | kein Training | Kantonalkaderweekend           |
 
-- **Datum:** Format `TT.MM.` (mit Punkt am Ende). Bestimmt auch, in welche
-  Tabelle der Eintrag kommt: Monat 1–6 → „Januar–Juni", 7–12 → „Juli–Dezember".
-- **Status:** `training`, `kein` oder `ersatz` (Gross-/Kleinschreibung egal).
+- **Datum:** Tag vor Monat. Verschiedene Schreibweisen werden erkannt, z. B.
+  `10/1/2026`, `10.01.2026`, `10.01.` oder ISO `2026-01-10` — am einfachsten
+  ist eine normale Datumsspalte in Google Sheets. Das Datum bestimmt auch, in
+  welche Tabelle der Eintrag kommt: Monat 1–6 → „Januar–Juni",
+  7–12 → „Juli–Dezember". Das Jahr in den Überschriften wird aus den Daten
+  übernommen.
+- **Status:** `Training`, `kein Training` oder `Ersatz`
+  (Gross-/Kleinschreibung egal; alles, was nicht „kein/nein/leer" ist und
+  „Training" enthält, gilt als Training, „Ersatz" als Ersatztraining).
 - **Bemerkung:** frei (z. B. „National Randori Day"). Darf Kommas enthalten.
 
 ## Einmaliges Setup

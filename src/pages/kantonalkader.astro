@@ -21,11 +21,13 @@ interface TrainingRow {
 //
 // Erwartetes CSV-Format (erste Zeile = Kopfzeile):
 //   Datum,Status,Bemerkung
-//   10.01.,kein,
-//   17.01.,training,
-//   07.06.,ersatz,Kantonalkadertraining Rothrist
+//   10/1/2026,kein Training,
+//   17/1/2026,Training,
+//   7/6/2026,Ersatz,Kantonalkadertraining Rothrist
 //
-// Status-Werte: "training" | "kein" | "ersatz" (Gross-/Kleinschreibung egal).
+// Datum: Tag vor Monat, diverse Schreibweisen (10/1/2026, 10.01.2026, 10.01.,
+// ISO 2026-01-10). Status: "Training" | "kein Training" | "Ersatz"
+// (Gross-/Kleinschreibung egal).
 // Kann das Sheet nicht geladen werden (URL fehlt oder Sheet nicht erreichbar),
 // bricht der Build bewusst ab — Netlify behält dann den letzten erfolgreichen
 // Deploy. Es gibt keinen im Code hinterlegten Reserveplan.
@@ -65,16 +67,30 @@ function parseCsv(text: string): string[][] {
 function normalizeStatus(raw: string): Status {
   const v = raw.trim().toLowerCase();
   if (v.includes('ersatz')) return 'ersatz';
-  if (v === 'training' || v === 'ja' || v === 'x') return true;
+  if (v.startsWith('kein') || v === 'nein' || v === '' || v === '-') return false;
+  if (v.includes('training') || v === 'ja' || v === 'x') return true;
   return false;
 }
 
-function monthOf(date: string): number {
-  const m = date.match(/\d{1,2}\.(\d{1,2})\./);
-  return m ? parseInt(m[1], 10) : 0;
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+// Datum aus dem Sheet parsen — tolerant gegenüber verschiedenen Schreibweisen:
+// 10/1/2026, 10.01.2026, 10.01., 10-1-26 (Tag vor Monat, europäisch) sowie
+// ISO 2026-01-10. Liefert Tag/Monat/Jahr oder null, wenn nichts erkennbar ist.
+function parseDate(raw: string): { day: number; month: number; year?: number } | null {
+  const s = raw.trim();
+  let m = s.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/); // ISO: Jahr zuerst
+  if (m) return { year: +m[1], month: +m[2], day: +m[3] };
+  m = s.match(/^(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?/); // Tag.Monat.Jahr
+  if (m) {
+    let year = m[3] ? +m[3] : undefined;
+    if (year !== undefined && year < 100) year += 2000;
+    return { day: +m[1], month: +m[2], year };
+  }
+  return null;
 }
 
-async function loadSchedule(): Promise<{ h1: TrainingRow[]; h2: TrainingRow[] }> {
+async function loadSchedule(): Promise<{ h1: TrainingRow[]; h2: TrainingRow[]; year: number }> {
   const url = import.meta.env.PUBLIC_KADER_SHEET_CSV;
   if (!url) {
     throw new Error('PUBLIC_KADER_SHEET_CSV ist nicht gesetzt — siehe docs/kantonalkader-termine.md');
@@ -95,24 +111,37 @@ async function loadSchedule(): Promise<{ h1: TrainingRow[]; h2: TrainingRow[] }>
   if (si === -1) si = 1;
   if (ni === -1) ni = 2;
 
-  const all: TrainingRow[] = rows.slice(1)
-    .map((r) => ({
-      date: (r[di] || '').trim(),
+  const h1: TrainingRow[] = [];
+  const h2: TrainingRow[] = [];
+  const years: number[] = [];
+
+  for (const r of rows.slice(1)) {
+    const parsed = parseDate(r[di] || '');
+    if (!parsed) continue;
+    const row: TrainingRow = {
+      date: `${pad2(parsed.day)}.${pad2(parsed.month)}.`,
       training: normalizeStatus(r[si] || ''),
       note: (r[ni] || '').trim(),
-    }))
-    .filter((r) => /\d{1,2}\.\d{1,2}\./.test(r.date));
+    };
+    if (parsed.year) years.push(parsed.year);
+    (parsed.month <= 6 ? h1 : h2).push(row);
+  }
 
-  if (all.length === 0) throw new Error('Kader-Sheet enthält keine gültigen Zeilen');
+  if (h1.length === 0 && h2.length === 0) {
+    throw new Error('Kader-Sheet enthält keine gültigen Zeilen');
+  }
 
-  return {
-    h1: all.filter((r) => monthOf(r.date) <= 6),
-    h2: all.filter((r) => monthOf(r.date) >= 7),
-  };
+  // Saison-Jahr aus den Daten ableiten (häufigstes Jahr), sonst Build-Jahr.
+  const year = years.length
+    ? years.sort((a, b) =>
+        years.filter((y) => y === b).length - years.filter((y) => y === a).length,
+      )[0]
+    : new Date().getFullYear();
+
+  return { h1, h2, year };
 }
 
-const { h1: stpH1, h2: stpH2 } = await loadSchedule();
-const seasonYear = new Date().getFullYear();
+const { h1: stpH1, h2: stpH2, year: seasonYear } = await loadSchedule();
 const standDate = new Date().toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
 ---
 
