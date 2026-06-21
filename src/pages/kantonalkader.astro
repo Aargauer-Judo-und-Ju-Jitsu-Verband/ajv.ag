@@ -26,67 +26,10 @@ interface TrainingRow {
 //   07.06.,ersatz,Kantonalkadertraining Rothrist
 //
 // Status-Werte: "training" | "kein" | "ersatz" (Gross-/Kleinschreibung egal).
-// Fällt das Laden aus (URL fehlt oder Sheet nicht erreichbar), werden die
-// unten hinterlegten Fallback-Daten verwendet — der Build bricht nie ab.
+// Kann das Sheet nicht geladen werden (URL fehlt oder Sheet nicht erreichbar),
+// bricht der Build bewusst ab — Netlify behält dann den letzten erfolgreichen
+// Deploy. Es gibt keinen im Code hinterlegten Reserveplan.
 // ---------------------------------------------------------------------------
-
-const fallbackH1: TrainingRow[] = [
-  { date: '10.01.', training: false, note: '' },
-  { date: '17.01.', training: true, note: '' },
-  { date: '24.01.', training: true, note: '' },
-  { date: '31.01.', training: true, note: '' },
-  { date: '07.02.', training: true, note: '' },
-  { date: '14.02.', training: true, note: '' },
-  { date: '21.02.', training: false, note: 'National Randori Day' },
-  { date: '28.02.', training: true, note: '' },
-  { date: '07.03.', training: true, note: '' },
-  { date: '14.03.', training: true, note: '' },
-  { date: '21.03.', training: true, note: '' },
-  { date: '28.03.', training: true, note: '' },
-  { date: '04.04.', training: false, note: 'Karsamstag' },
-  { date: '11.04.', training: false, note: 'Usagi Fiesch' },
-  { date: '18.04.', training: true, note: '' },
-  { date: '25.04.', training: true, note: '' },
-  { date: '02.05.', training: true, note: '' },
-  { date: '09.05.', training: false, note: 'Dojo besetzt: OSMM-Heimrunde & NLA-Kämpfe' },
-  { date: '16.05.', training: true, note: '' },
-  { date: '23.05.', training: false, note: 'National Randori Day' },
-  { date: '30.05.', training: true, note: '' },
-  { date: '06.06.', training: false, note: 'Dojo besetzt — Ersatztraining am So.' },
-  { date: '07.06.', training: 'ersatz', note: 'Kantonalkadertraining Rothrist' },
-  { date: '13.06.', training: true, note: '' },
-  { date: '20.06.', training: true, note: '' },
-  { date: '27.06.', training: false, note: 'National Education Day' },
-];
-
-const fallbackH2: TrainingRow[] = [
-  { date: '04.07.', training: true, note: '' },
-  { date: '11.07.', training: true, note: '' },
-  { date: '18.07.', training: true, note: '' },
-  { date: '25.07.', training: true, note: '' },
-  { date: '01.08.', training: true, note: '' },
-  { date: '08.08.', training: true, note: '' },
-  { date: '15.08.', training: false, note: 'Kantonalkaderweekend' },
-  { date: '22.08.', training: true, note: '' },
-  { date: '29.08.', training: true, note: '' },
-  { date: '05.09.', training: true, note: '' },
-  { date: '12.09.', training: true, note: '' },
-  { date: '19.09.', training: true, note: '' },
-  { date: '26.09.', training: true, note: '' },
-  { date: '03.10.', training: false, note: 'National Randori Day' },
-  { date: '10.10.', training: false, note: 'Brugger Herbstcamp' },
-  { date: '17.10.', training: true, note: '' },
-  { date: '24.10.', training: true, note: '' },
-  { date: '31.10.', training: true, note: '' },
-  { date: '07.11.', training: false, note: 'Final 4 in Brugg (Zuschauen)' },
-  { date: '14.11.', training: true, note: '' },
-  { date: '21.11.', training: true, note: '' },
-  { date: '28.11.', training: true, note: '' },
-  { date: '05.12.', training: true, note: '' },
-  { date: '12.12.', training: true, note: '' },
-  { date: '19.12.', training: true, note: '' },
-  { date: '26.12.', training: false, note: '' },
-];
 
 // Minimaler CSV-Parser (verarbeitet "..."-gequotete Felder mit Kommas/Zeilenumbrüchen).
 function parseCsv(text: string): string[][] {
@@ -131,47 +74,44 @@ function monthOf(date: string): number {
   return m ? parseInt(m[1], 10) : 0;
 }
 
-async function loadSchedule(): Promise<{ h1: TrainingRow[]; h2: TrainingRow[]; live: boolean }> {
+async function loadSchedule(): Promise<{ h1: TrainingRow[]; h2: TrainingRow[] }> {
   const url = import.meta.env.PUBLIC_KADER_SHEET_CSV;
-  if (!url) return { h1: fallbackH1, h2: fallbackH2, live: false };
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rows = parseCsv(await res.text());
-    if (rows.length < 2) throw new Error('CSV leer');
-
-    // Spaltenindizes aus der Kopfzeile bestimmen (sonst positionell 0/1/2).
-    const header = rows[0].map((h) => h.trim().toLowerCase());
-    let di = header.findIndex((h) => h.startsWith('datum'));
-    let si = header.findIndex((h) => h.startsWith('status'));
-    let ni = header.findIndex((h) => h.startsWith('bemerk'));
-    if (di === -1 && si === -1) { di = 0; si = 1; ni = 2; }
-    if (di === -1) di = 0;
-    if (si === -1) si = 1;
-    if (ni === -1) ni = 2;
-
-    const all: TrainingRow[] = rows.slice(1)
-      .map((r) => ({
-        date: (r[di] || '').trim(),
-        training: normalizeStatus(r[si] || ''),
-        note: (r[ni] || '').trim(),
-      }))
-      .filter((r) => /\d{1,2}\.\d{1,2}\./.test(r.date));
-
-    if (all.length === 0) throw new Error('keine gültigen Zeilen');
-
-    return {
-      h1: all.filter((r) => monthOf(r.date) <= 6),
-      h2: all.filter((r) => monthOf(r.date) >= 7),
-      live: true,
-    };
-  } catch (e) {
-    console.warn('[kantonalkader] Sheet konnte nicht geladen werden, Fallback wird verwendet:', e);
-    return { h1: fallbackH1, h2: fallbackH2, live: false };
+  if (!url) {
+    throw new Error('PUBLIC_KADER_SHEET_CSV ist nicht gesetzt — siehe docs/kantonalkader-termine.md');
   }
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Kader-Sheet nicht erreichbar: HTTP ${res.status}`);
+  const rows = parseCsv(await res.text());
+  if (rows.length < 2) throw new Error('Kader-Sheet leer');
+
+  // Spaltenindizes aus der Kopfzeile bestimmen (sonst positionell 0/1/2).
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  let di = header.findIndex((h) => h.startsWith('datum'));
+  let si = header.findIndex((h) => h.startsWith('status'));
+  let ni = header.findIndex((h) => h.startsWith('bemerk'));
+  if (di === -1 && si === -1) { di = 0; si = 1; ni = 2; }
+  if (di === -1) di = 0;
+  if (si === -1) si = 1;
+  if (ni === -1) ni = 2;
+
+  const all: TrainingRow[] = rows.slice(1)
+    .map((r) => ({
+      date: (r[di] || '').trim(),
+      training: normalizeStatus(r[si] || ''),
+      note: (r[ni] || '').trim(),
+    }))
+    .filter((r) => /\d{1,2}\.\d{1,2}\./.test(r.date));
+
+  if (all.length === 0) throw new Error('Kader-Sheet enthält keine gültigen Zeilen');
+
+  return {
+    h1: all.filter((r) => monthOf(r.date) <= 6),
+    h2: all.filter((r) => monthOf(r.date) >= 7),
+  };
 }
 
-const { h1: stpH1, h2: stpH2, live } = await loadSchedule();
+const { h1: stpH1, h2: stpH2 } = await loadSchedule();
 const seasonYear = new Date().getFullYear();
 const standDate = new Date().toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
 ---
@@ -397,7 +337,7 @@ const standDate = new Date().toLocaleDateString('de-CH', { day: '2-digit', month
           </table>
         </div>
       </div>
-      <p class="mt-4 text-xs text-stone-400 text-right">Stand: {standDate}{live ? '' : ' (Reserveplan)'}</p>
+      <p class="mt-4 text-xs text-stone-400 text-right">Stand: {standDate}</p>
     </div>
   </section>
 

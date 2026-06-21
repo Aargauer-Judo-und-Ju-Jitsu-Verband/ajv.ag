@@ -18,9 +18,14 @@ Google Sheet  ──(als CSV veröffentlicht)──►  Astro liest beim Build  
 - Einmal pro Nacht stösst eine GitHub Action einen Netlify-Build an. Änderungen
   am Sheet sind also **am nächsten Tag** live. (Sofort live geht über
   *manuelles* Auslösen, siehe unten.)
-- Ist das Sheet mal nicht erreichbar oder die URL nicht gesetzt, fällt die Seite
-  automatisch auf einen im Code hinterlegten Reserveplan zurück — der Build
-  bricht nie ab. In dem Fall steht beim „Stand"-Datum *(Reserveplan)*.
+- Es gibt **keinen Reserveplan im Code**: Ist das Sheet nicht erreichbar oder die
+  Variable `PUBLIC_KADER_SHEET_CSV` nicht gesetzt, **bricht der Build bewusst ab**.
+  Netlify behält in dem Fall automatisch den letzten erfolgreichen Deploy — die
+  Live-Seite zeigt also weiterhin die zuletzt gültigen Termine.
+
+> ⚠️ **Wichtig:** Die Variable `PUBLIC_KADER_SHEET_CSV` muss in Netlify gesetzt
+> sein, sonst schlägt **jeder** Deploy der Seite fehl. Das Setup unten also vor
+> dem nächsten Deploy erledigen.
 
 ## Das Google Sheet
 
