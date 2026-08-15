@@ -191,8 +191,8 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
           </div>
           <div class="min-w-0 flex-1 flex items-center gap-3">
             <div class="min-w-0 flex-1">
-              <div class="flex items-baseline gap-2">
-                <h3 class="font-display text-sm font-semibold text-stone-900 truncate group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
+              <div class="flex items-baseline gap-2 min-w-0">
+                <h3 class="min-w-0 font-display text-sm font-semibold text-stone-900 truncate group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
                 <span class="flex-shrink-0 text-xs text-stone-400">${formatTimeInfo(ev)}</span>
               </div>
               ${ev.place ? `<p class="text-xs text-stone-400 truncate">${ev.place}</p>` : ''}
@@ -229,7 +229,7 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
               ${canceledBadge(ev)}
             </div>
             <div class="flex items-start justify-between gap-3">
-              <h3 class="font-display text-lg font-semibold text-stone-900 leading-snug group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
+              <h3 class="min-w-0 break-words font-display text-lg font-semibold text-stone-900 leading-snug group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
               <a href="${addToGCalUrl(ev)}" target="_blank" rel="noopener noreferrer" title="Zum Kalender hinzufügen"
                  class="flex-shrink-0 mt-0.5 p-1.5 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -240,7 +240,7 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
               ${ev.place ? `<span class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${ev.place}</span>` : ''}
               ${signupInfo(ev)}
             </div>
-            ${ev.descriptionHtml ? `<div class="mt-2 text-sm text-stone-600 leading-relaxed prose-links">${ev.descriptionHtml}</div>` : ''}
+            ${ev.descriptionHtml ? `<div class="mt-2 text-sm text-stone-600 leading-relaxed prose-links break-words">${ev.descriptionHtml}</div>` : ''}
           </div>
         </article>`;
     }
@@ -464,6 +464,7 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     color: var(--color-brand-600);
     text-decoration: underline;
     text-underline-offset: 2px;
+    overflow-wrap: anywhere; /* break long bare URLs instead of overflowing */
   }
   .prose-links :global(a:hover) {
     color: var(--color-brand-700);
