@@ -28,6 +28,22 @@ function zurichStartOfToday() {
   return `${parts} 00:00:00`;
 }
 
+// Oldest past event to return when past events are requested (keeps the payload
+// bounded — years of history would otherwise pile up).
+const PAST_HORIZON_MONTHS = 12;
+
+function zurichHorizon(monthsBack) {
+  const now = new Date();
+  const back = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsBack, now.getUTCDate()));
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Zurich',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(back);
+  return `${parts} 00:00:00`;
+}
+
 async function weblingGet(path, apiKey) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { apikey: apiKey, accept: 'application/json' },
@@ -152,10 +168,16 @@ export default async (req) => {
       }
     }
 
-    // 2. Upcoming event ids, sorted by begin. `end > start-of-today` keeps
-    //    events that are happening today / still running.
-    const filter = encodeURIComponent(`\`end\` > "${zurichStartOfToday()}"`);
-    const order = encodeURIComponent('`begin` ASC');
+    // 2. Event ids, sorted by begin.
+    //    Default: upcoming events (`end > start-of-today` keeps today/running).
+    //    ?past=1: events that already ended, newest first, within the horizon.
+    const wantPast = new URL(req.url).searchParams.get('past') === '1';
+    const today = zurichStartOfToday();
+    const filterExpr = wantPast
+      ? `\`end\` <= "${today}" AND \`begin\` > "${zurichHorizon(PAST_HORIZON_MONTHS)}"`
+      : `\`end\` > "${today}"`;
+    const filter = encodeURIComponent(filterExpr);
+    const order = encodeURIComponent(wantPast ? '`begin` DESC' : '`begin` ASC');
     const idList = await weblingGet(
       `/calendarevent?filter=${filter}&order=${order}`,
       apiKey

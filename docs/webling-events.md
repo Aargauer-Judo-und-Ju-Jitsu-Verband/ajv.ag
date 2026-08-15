@@ -21,6 +21,10 @@ Browser ──fetch──▶ /api/events (Netlify Function) ──REST──▶ 
    - `compact` (Startseite): kompakte Zeilen, keine Filter
    - Vollansicht (Veranstaltungen): Karten mit **Kalender-Filter-Chips**
      (AJV / Kantonalkader / SMM), Bild, Beschreibung, Anmelde-Infos
+   - **Toggle „Vergangene Termine anzeigen"** (Vollansicht, standardmässig aus):
+     lädt vergangene Events erst bei Bedarf über `/api/events?past=1`
+     (letzte 12 Monate, neueste zuerst) und zeigt sie in einem eigenen Abschnitt.
+     Der Zustand wird pro Session gemerkt (sessionStorage).
 
 ## Pflege der Termine
 
