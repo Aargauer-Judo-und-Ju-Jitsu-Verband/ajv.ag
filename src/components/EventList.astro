@@ -271,7 +271,8 @@ const { maxEvents = 6, compact = false } = Astro.props;
     const divide = isCompact ? 'divide-y divide-stone-100' : 'divide-y divide-stone-200';
 
     const upcoming = applyFilter(allEvents).slice(0, maxEvents);
-    const past = showPast && pastEvents ? applyFilter(pastEvents).slice(0, maxEvents) : [];
+    // The homepage (compact) never shows past events, regardless of stored state.
+    const past = !isCompact && showPast && pastEvents ? applyFilter(pastEvents).slice(0, maxEvents) : [];
 
     if (upcoming.length === 0 && past.length === 0) {
       itemsEl.classList.add('hidden');
@@ -404,15 +405,18 @@ const { maxEvents = 6, compact = false } = Astro.props;
       }
       if (activeCalendars.size === 0) activeCalendars = new Set(calendarsInData);
 
-      try {
-        showPast = sessionStorage.getItem(PAST_KEY) === '1';
-      } catch {}
+      // Past events only ever apply to the full view — never the homepage.
+      if (!isCompact) {
+        try {
+          showPast = sessionStorage.getItem(PAST_KEY) === '1';
+        } catch {}
+      }
 
       renderControls();
       renderList();
 
       // If the toggle was left on, load past events now.
-      if (showPast && pastEvents === null && !pastLoading) {
+      if (!isCompact && showPast && pastEvents === null && !pastLoading) {
         pastLoading = true;
         renderPastToggle();
         await loadPast();
