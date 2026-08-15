@@ -9,7 +9,12 @@ const board = [
   { role: 'Kassier', name: 'René Siegrist', image: '/images/board/rene-siegrist.webp' },
 ];
 
-const honorary = ['Peter Fischer', 'Peter Walter', 'Michael Weissbarth'];
+const honorary = [
+  { name: 'Peter Fischer' },
+  { name: 'Peter Walter' },
+  { name: 'Michael Weissbarth', since: 2025 },
+  { name: 'Matthias Marti', since: 2025 },
+];
 ---
 
 <BaseLayout title="Vorstand" description="Der Vorstand des Aargauer Judo und Ju-Jitsu Verbands – Präsidium, Finanzen, Sport und Nachwuchsförderung. Lerne die Personen hinter dem AJV kennen.">
@@ -69,10 +74,12 @@ const honorary = ['Peter Fischer', 'Peter Walter', 'Michael Weissbarth'];
         <p class="text-xs font-semibold text-brand-500 uppercase tracking-[0.3em] mb-3">Verdienste</p>
         <h2 class="font-display font-bold text-3xl lg:text-4xl text-stone-900 mb-8 heading-accent">Ehrenmitglieder</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {honorary.map((name) => (
+          {honorary.map((member) => (
             <div class="bg-stone-100 border border-stone-200 rounded-lg p-6">
-              <h3 class="font-display font-semibold text-xl text-stone-900">{name}</h3>
-              <p class="mt-1 text-sm text-stone-400">Ehrenmitglied</p>
+              <h3 class="font-display font-semibold text-xl text-stone-900">{member.name}</h3>
+              <p class="mt-1 text-sm text-stone-400">
+                {member.since ? `Ehrenmitglied seit ${member.since}` : 'Ehrenmitglied'}
+              </p>
             </div>
           ))}
         </div>
