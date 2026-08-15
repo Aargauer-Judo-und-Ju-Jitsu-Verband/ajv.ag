@@ -168,6 +168,28 @@ export default async (req) => {
       }
     }
 
+    // 1b. Single event by id (?id=<n>) — powers the detail page. Fetches the
+    //     event directly, so it works even outside the upcoming/past windows.
+    const idParam = new URL(req.url).searchParams.get('id');
+    if (idParam) {
+      if (!/^\d+$/.test(idParam)) {
+        return new Response(JSON.stringify({ event: null }), { status: 400, headers: jsonHeaders });
+      }
+      let event = null;
+      try {
+        const raw = await weblingGet(`/calendarevent/${idParam}`, apiKey);
+        const obj = Array.isArray(raw) ? raw[0] : raw;
+        if (obj && obj.type === 'calendarevent') event = normalizeEvent(obj, calendars);
+      } catch {
+        // Unknown id → Webling responds non-2xx; treat as not found.
+        event = null;
+      }
+      return new Response(JSON.stringify({ event }), {
+        status: event ? 200 : 404,
+        headers: jsonHeaders,
+      });
+    }
+
     // 2. Event ids, sorted by begin.
     //    Default: upcoming events (`end > start-of-today` keeps today/running).
     //    ?past=1: events that already ended, newest first, within the horizon.

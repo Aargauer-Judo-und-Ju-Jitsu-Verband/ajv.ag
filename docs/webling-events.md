@@ -18,6 +18,7 @@ Browser ──fetch──▶ /api/events (Netlify Function) ──REST──▶ 
      werden verlinkt, Ganztags-/Mehrtages-Events erkannt, Anmeldungen, Absagen)
    - setzt Cache-Header: Browser 60 s, CDN 5 min mit Hintergrund-Refresh
 2. **Komponente** `src/components/EventList.astro` holt `/api/events` und rendert die Liste.
+   - Ein Klick auf einen Termin öffnet die **Detail-Ansicht** `/veranstaltung?id=<id>`.
    - `compact` (Startseite): kompakte Zeilen, keine Filter
    - Vollansicht (Veranstaltungen): Karten mit **Kalender-Filter-Chips**
      (AJV / Kantonalkader / SMM), Bild, Beschreibung, Anmelde-Infos
@@ -25,6 +26,21 @@ Browser ──fetch──▶ /api/events (Netlify Function) ──REST──▶ 
      lädt vergangene Events erst bei Bedarf über `/api/events?past=1`
      (letzte 12 Monate, neueste zuerst) und zeigt sie in einem eigenen Abschnitt.
      Der Zustand wird pro Session gemerkt (sessionStorage).
+3. **Detail-Seite** `src/pages/veranstaltung.astro` (Route `/veranstaltung?id=<id>`)
+   - lädt genau ein Event über `/api/events?id=<id>` (funktioniert auch für Termine
+     ausserhalb des Anzeige-Fensters) und rendert die Vollansicht.
+   - `noindex` und aus der Sitemap ausgeschlossen (client-gerendert, Query-Parameter).
+
+Gemeinsame Typen/Formatierung liegen in `src/lib/eventFormat.ts` und werden von
+Liste und Detail-Seite geteilt (damit sie nicht auseinanderdriften).
+
+### API-Parameter der Function
+
+| Aufruf | Rückgabe |
+|--------|----------|
+| `/api/events` | `{ events: [...], calendars: [...] }` — kommende Termine, sortiert |
+| `/api/events?past=1` | vergangene Termine (letzte 12 Monate, neueste zuerst) |
+| `/api/events?id=<id>` | `{ event: {...} }` bzw. `{ event: null }` (Status 404) |
 
 ## Pflege der Termine
 
