@@ -100,7 +100,7 @@ const posts = (await getCollection('blog'))
             <span class="w-2 h-2 rounded-full bg-stone-400"></span>
             <h3 class="font-display text-xl font-bold text-stone-900">Kantonalkader &amp; SMM</h3>
           </div>
-          <EventList maxEvents={5} compact calendars={['Kantonalkader', 'SMM']} />
+          <EventList maxEvents={5} compact exclude={['AJV']} />
         </div>
       </div>
       <div class="mt-6 text-center">

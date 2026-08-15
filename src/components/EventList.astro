@@ -10,10 +10,11 @@
 interface Props {
   maxEvents?: number;
   compact?: boolean;
-  calendars?: string[];
+  calendars?: string[]; // allowlist: only show these calendars
+  exclude?: string[];   // blocklist: show all calendars except these
 }
 
-const { maxEvents = 6, compact = false, calendars = [] } = Astro.props;
+const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.props;
 ---
 
 <div
@@ -21,6 +22,7 @@ const { maxEvents = 6, compact = false, calendars = [] } = Astro.props;
   data-max-events={maxEvents}
   data-compact={compact ? 'true' : 'false'}
   data-calendars={calendars.join(',')}
+  data-exclude={exclude.join(',')}
 >
   <!-- Loading -->
   <div data-el="loading" class="flex items-center justify-center py-12">
@@ -94,8 +96,12 @@ const { maxEvents = 6, compact = false, calendars = [] } = Astro.props;
   function initEventList(root: HTMLElement) {
     const maxEvents = parseInt(root.dataset.maxEvents || '6', 10);
     const isCompact = root.dataset.compact === 'true';
-    // Allowlist: only show these calendars (empty = all).
+    // Allowlist / blocklist of calendars (empty = no restriction).
     const restrictCalendars = (root.dataset.calendars || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const excludeCalendars = (root.dataset.exclude || '')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
@@ -124,14 +130,19 @@ const { maxEvents = 6, compact = false, calendars = [] } = Astro.props;
       for (const e of allEvents) if (e.calendar) present.add(e.calendar);
       if (pastEvents) for (const e of pastEvents) if (e.calendar) present.add(e.calendar);
       calendarsInData = calendarOrder.filter(
-        (c) => present.has(c) && (!restrictCalendars.length || restrictCalendars.includes(c))
+        (c) =>
+          present.has(c) &&
+          (!restrictCalendars.length || restrictCalendars.includes(c)) &&
+          (!excludeCalendars.length || !excludeCalendars.includes(c))
       );
     }
 
-    // Restrict to the allowlisted calendars (applies to both modes).
+    // Restrict to the allow-/blocklisted calendars (applies to both modes).
     function baseFilter(list: AjvEvent[]): AjvEvent[] {
-      if (!restrictCalendars.length) return list;
-      return list.filter((e) => e.calendar && restrictCalendars.includes(e.calendar));
+      let l = list;
+      if (restrictCalendars.length) l = l.filter((e) => e.calendar && restrictCalendars.includes(e.calendar));
+      if (excludeCalendars.length) l = l.filter((e) => !excludeCalendars.includes(e.calendar));
+      return l;
     }
 
     // Full-view chip filter (no-op in compact mode).
@@ -396,8 +407,15 @@ const { maxEvents = 6, compact = false, calendars = [] } = Astro.props;
     async function load() {
       try {
         const data = await fetchUpcoming();
-        allEvents = (data.events || []) as AjvEvent[];
         loadingEl.classList.add('hidden');
+        // A configured/upstream problem returns { events: [], error }. Show the
+        // error state so it doesn't look like "no events".
+        if (data.error) {
+          console.error('Events API error:', data.error);
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        allEvents = (data.events || []) as AjvEvent[];
 
         calendarOrder = (data.calendars || []) as string[];
         recomputeCalendars();
