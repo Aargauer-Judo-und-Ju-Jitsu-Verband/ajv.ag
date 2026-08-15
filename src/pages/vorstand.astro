@@ -2,11 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const board = [
-  { role: 'Präsident', name: 'Andreas Schmid', image: '/images/board/andreas-schmid.webp' },
-  { role: 'Vizepräsident', name: 'Philippe Kölliker', image: '/images/board/philippe-koelliker.webp' },
-  { role: 'Aktuarin', name: 'Rahel Kuhn', image: '/images/board/rahel-kuhn.webp' },
-  { role: 'Vertreterin Kantonalkader', name: 'Jenny Gal', image: '/images/board/jenny-gal.webp' },
-  { role: 'Kassier', name: 'René Siegrist', image: '/images/board/rene-siegrist.webp' },
+  { role: 'Präsident', name: 'Andreas Schmid', image: '/images/board/andreas-schmid-portrait.webp' },
+  { role: 'Vizepräsident', name: 'Philippe Kölliker', image: '/images/board/philippe-koelliker-portrait.webp' },
+  { role: 'Aktuarin', name: 'Rahel Kuhn', image: '/images/board/rahel-kuhn-portrait.webp' },
+  { role: 'Vertreterin Kantonalkader', name: 'Jenny Gal', image: '/images/board/jenny-gal-portrait.webp' },
+  { role: 'Kassier', name: 'René Siegrist', image: '/images/board/rene-siegrist-portrait.webp' },
 ];
 
 const honorary = [
@@ -55,16 +55,21 @@ const honorary = [
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {board.map((member, i) => (
-          <div class={`bg-white border border-stone-200 rounded-lg p-6 card-hover animate-fade-up stagger-${Math.min(i + 1, 4)}`}>
-            <div class="w-20 h-20 overflow-hidden mb-5 bg-stone-200">
+          <div class={`group flex flex-col bg-white border border-stone-200 rounded-lg overflow-hidden card-hover animate-fade-up stagger-${Math.min(i + 1, 4)}`}>
+            <div class="aspect-[4/5] overflow-hidden bg-stone-200">
               <img
                 src={member.image}
-                alt={member.name}
-                class="w-full h-full object-cover"
+                alt={`${member.name} – ${member.role} des AJV`}
+                width="700"
+                height="875"
+                loading="lazy"
+                class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <p class="text-xs font-semibold text-brand-500 uppercase tracking-[0.3em]">{member.role}</p>
-            <h3 class="mt-2 font-display font-semibold text-xl text-stone-900">{member.name}</h3>
+            <div class="p-6">
+              <p class="text-xs font-semibold text-brand-500 uppercase tracking-[0.3em]">{member.role}</p>
+              <h3 class="mt-2 font-display font-semibold text-xl lg:text-2xl text-stone-900">{member.name}</h3>
+            </div>
           </div>
         ))}
       </div>
