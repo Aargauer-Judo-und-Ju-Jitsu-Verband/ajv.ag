@@ -1,25 +1,21 @@
 ---
+// Renders upcoming AJV events from the /api/events Netlify Function (Webling REST).
+// - compact: condensed rows for the homepage (no filter chips)
+// - full:    cards with calendar tag filter chips, image, description, signup
 interface Props {
   maxEvents?: number;
   compact?: boolean;
 }
 
 const { maxEvents = 6, compact = false } = Astro.props;
-
-const CALENDAR_ID = import.meta.env.PUBLIC_GOOGLE_CALENDAR_ID || '';
-const API_KEY = import.meta.env.PUBLIC_GOOGLE_CALENDAR_KEY || '';
-const ICAL_URL = `https://calendar.google.com/calendar/ical/${CALENDAR_ID}/public/basic.ics`;
-const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR_ID}`;
 ---
 
 <div
   id="event-list"
-  data-calendar-id={CALENDAR_ID}
-  data-api-key={API_KEY}
   data-max-events={maxEvents}
   data-compact={compact ? 'true' : 'false'}
 >
-  <!-- Loading state -->
+  <!-- Loading -->
   <div id="event-loading" class="flex items-center justify-center py-12">
     <div class="flex items-center gap-3 text-stone-400">
       <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -30,255 +26,324 @@ const GCAL_SUB_URL = `https://calendar.google.com/calendar/render?cid=${CALENDAR
     </div>
   </div>
 
-  <!-- Error state -->
+  <!-- Error -->
   <div id="event-error" class="hidden py-8 text-center">
     <p class="text-sm text-stone-500">Kalender konnte nicht geladen werden.</p>
-    <a
-      href={`https://calendar.google.com/calendar/embed?src=${CALENDAR_ID}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="inline-flex items-center gap-1 mt-2 text-sm text-brand-600 hover:text-brand-700 transition-colors"
-    >
-      Kalender direkt öffnen &rarr;
-    </a>
   </div>
 
-  <!-- Events container -->
-  <div id="event-items" class="hidden divide-y divide-stone-100"></div>
+  <!-- Filter chips (full mode only) -->
+  <div id="event-filters" class="hidden mb-6 flex flex-wrap items-center gap-2"></div>
 
-  <!-- Empty state -->
+  <!-- Events -->
+  <div id="event-items" class="hidden"></div>
+
+  <!-- Empty -->
   <div id="event-empty" class="hidden py-8 text-center">
     <p class="text-sm text-stone-500">Keine kommenden Veranstaltungen.</p>
-  </div>
-
-  <!-- Subscribe bar -->
-  <div id="event-subscribe" class="hidden mt-6 pt-6 border-t border-stone-200 flex flex-wrap items-center gap-3">
-    <span class="text-xs text-stone-400 uppercase tracking-wider font-semibold">Kalender abonnieren</span>
-    <a
-      href={GCAL_SUB_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand-600 bg-brand-50 rounded-md hover:bg-brand-100 transition-colors"
-    >
-      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-      </svg>
-      Google
-    </a>
-    <a
-      href={ICAL_URL}
-      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand-600 bg-brand-50 rounded-md hover:bg-brand-100 transition-colors"
-    >
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-      iCal / Outlook
-    </a>
   </div>
 </div>
 
 <script>
+  interface Signup { max: number | null; count: number; until: string | null }
+  interface AjvEvent {
+    id: number | null;
+    title: string;
+    descriptionHtml: string;
+    place: string;
+    begin: string | null;
+    end: string | null;
+    beginRaw: string | null;
+    endRaw: string | null;
+    isAllDay: boolean;
+    status: string;
+    calendarId: number | null;
+    calendar: string;
+    calendarColor: string | null;
+    signup: Signup | null;
+  }
+
   const container = document.getElementById('event-list')!;
-  const calendarId = container.dataset.calendarId!;
-  const apiKey = container.dataset.apiKey!;
   const maxEvents = parseInt(container.dataset.maxEvents || '6', 10);
   const isCompact = container.dataset.compact === 'true';
 
   const loadingEl = document.getElementById('event-loading')!;
   const errorEl = document.getElementById('event-error')!;
+  const filtersEl = document.getElementById('event-filters')!;
   const itemsEl = document.getElementById('event-items')!;
   const emptyEl = document.getElementById('event-empty')!;
-  const subscribeEl = document.getElementById('event-subscribe')!;
 
   const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
   const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
-  function formatTime(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+  // Webling events carry no image field. Resolve a picture per event:
+  //   1. explicit override by title  2. per-calendar default  3. none (colour accent)
+  const EVENT_IMAGE_OVERRIDES: Record<string, string> = {
+    'Aargauer Ju-Jitsu-Day': '/images/events/ju-jitsu-day-1.webp',
+  };
+  const CALENDAR_DEFAULT_IMAGE: Record<string, string> = {
+    // e.g. 'Kantonalkader': '/images/events/kader.webp'
+  };
+  function imageFor(ev: AjvEvent): string {
+    return EVENT_IMAGE_OVERRIDES[ev.title] || CALENDAR_DEFAULT_IMAGE[ev.calendar] || '';
   }
 
-  function isAllDay(event: any): boolean {
-    return !!event.start.date && !event.start.dateTime;
+  const FILTER_KEY = 'ajv-event-filter';
+
+  let allEvents: AjvEvent[] = [];
+  let calendarsInData: string[] = [];
+  let activeCalendars = new Set<string>();
+
+  function ymd(raw: string | null): [number, number, number] {
+    const [d] = (raw || '').split(' ');
+    const [y, m, dd] = d.split('-').map(Number);
+    return [y, m, dd];
   }
 
-  function getStartDate(event: any): Date {
-    if (event.start.dateTime) return new Date(event.start.dateTime);
-    const [y, m, d] = event.start.date.split('-').map(Number);
+  function isMultiDayAllDay(ev: AjvEvent): boolean {
+    if (!ev.isAllDay || !ev.beginRaw || !ev.endRaw) return false;
+    const [sy, sm, sd] = ymd(ev.beginRaw);
+    const [ey, em, ed] = ymd(ev.endRaw);
+    const diff = (Date.UTC(ey, em - 1, ed) - Date.UTC(sy, sm - 1, sd)) / 86400000;
+    return diff > 1; // end is exclusive (midnight of the following day)
+  }
+
+  function startDate(ev: AjvEvent): Date {
+    const [y, m, d] = ymd(ev.beginRaw);
     return new Date(y, m - 1, d);
   }
 
-  function isMultiDay(event: any): boolean {
-    if (!isAllDay(event)) return false;
-    const start = event.start.date;
-    const end = event.end.date;
-    if (!start || !end) return false;
-    const [sy, sm, sd] = start.split('-').map(Number);
-    const [ey, em, ed] = end.split('-').map(Number);
-    const startDate = new Date(sy, sm - 1, sd);
-    const endDate = new Date(ey, em - 1, ed);
-    const diffDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-    return diffDays > 1;
-  }
-
-  function formatDateRange(event: any): string {
-    const start = getStartDate(event);
-    if (isAllDay(event)) {
-      if (isMultiDay(event)) {
-        const [ey, em, ed] = event.end.date.split('-').map(Number);
-        const endDate = new Date(ey, em - 1, ed - 1);
-        return `${start.getDate()}. ${MONTHS[start.getMonth()]} – ${endDate.getDate()}. ${MONTHS[endDate.getMonth()]}`;
+  function formatTimeInfo(ev: AjvEvent): string {
+    if (ev.isAllDay) {
+      if (isMultiDayAllDay(ev)) {
+        const [ey, em, ed] = ymd(ev.endRaw); // exclusive → last day is end - 1
+        const last = new Date(ey, em - 1, ed - 1);
+        return `${startDate(ev).getDate()}. ${MONTHS[startDate(ev).getMonth()]} – ${last.getDate()}. ${MONTHS[last.getMonth()]}`;
       }
       return 'Ganztägig';
     }
-    let timeStr = formatTime(event.start.dateTime);
-    if (event.end?.dateTime) {
-      timeStr += ` – ${formatTime(event.end.dateTime)}`;
+    const fmt = (iso: string) =>
+      new Date(iso).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+    let s = ev.begin ? fmt(ev.begin) : '';
+    if (ev.end) s += ` – ${fmt(ev.end)}`;
+    return s;
+  }
+
+  function toGCalStamp(ev: AjvEvent, which: 'begin' | 'end'): string {
+    if (ev.isAllDay) {
+      const raw = which === 'begin' ? ev.beginRaw : ev.endRaw;
+      return (raw || '').split(' ')[0].replace(/-/g, '');
     }
-    return timeStr;
+    const iso = which === 'begin' ? ev.begin : ev.end;
+    return new Date(iso!).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   }
 
-  // Format date as YYYYMMDD or YYYYMMDDTHHmmSSZ for Google Calendar add link
-  function toGCalDate(event: any, which: 'start' | 'end'): string {
-    const part = which === 'start' ? event.start : event.end;
-    if (part.date) {
-      return part.date.replace(/-/g, '');
-    }
-    return new Date(part.dateTime).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  function addToGCalUrl(ev: AjvEvent): string {
+    const text = encodeURIComponent(ev.title);
+    const dates = `${toGCalStamp(ev, 'begin')}/${toGCalStamp(ev, 'end')}`;
+    const location = encodeURIComponent(ev.place || '');
+    // Strip HTML from description for the calendar details field.
+    const tmp = document.createElement('div');
+    tmp.innerHTML = ev.descriptionHtml || '';
+    const details = encodeURIComponent(tmp.textContent || '');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&location=${location}&details=${details}`;
   }
 
-  function getAddToGCalUrl(event: any): string {
-    const title = encodeURIComponent(event.summary || '');
-    const dates = `${toGCalDate(event, 'start')}/${toGCalDate(event, 'end')}`;
-    const location = encodeURIComponent(event.location || '');
-    const details = encodeURIComponent(event.description || '');
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&location=${location}&details=${details}`;
+  function tagBadge(ev: AjvEvent): string {
+    if (!ev.calendar) return '';
+    const color = ev.calendarColor || '#2A57C5';
+    return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style="color:${color};background:${color}1a">
+      <span class="w-1.5 h-1.5 rounded-full" style="background:${color}"></span>${ev.calendar}</span>`;
   }
 
-  function renderAttachments(attachments: any[]): string {
-    if (!attachments || attachments.length === 0) return '';
-    const links = attachments.map((att: any) => {
-      const title = att.title || 'Anhang';
-      const url = att.fileUrl || '';
-      if (!url) return '';
-      return `
-        <a
-          href="${url}"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors"
-        >
-          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-          </svg>
-          ${title}
-        </a>
-      `;
-    }).filter(Boolean);
-    if (links.length === 0) return '';
-    return `<div class="mt-1.5 flex flex-wrap gap-3">${links.join('')}</div>`;
+  function canceledBadge(ev: AjvEvent): string {
+    return ev.status === 'canceled'
+      ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-red-600 bg-red-50">Abgesagt</span>`
+      : '';
   }
 
-  function renderEvent(event: any): string {
-    const start = getStartDate(event);
-    const day = start.getDate();
-    const month = MONTHS[start.getMonth()];
-    const weekday = WEEKDAYS[start.getDay()];
-    const title = event.summary || 'Ohne Titel';
-    const location = event.location || '';
-    const timeInfo = formatDateRange(event);
-    const attachmentsHtml = renderAttachments(event.attachments);
-    const addUrl = getAddToGCalUrl(event);
+  function signupInfo(ev: AjvEvent): string {
+    if (!ev.signup) return '';
+    const { max, count } = ev.signup;
+    const label = max ? `${count}/${max} Plätze` : `${count} Anmeldungen`;
+    return `<span class="inline-flex items-center gap-1.5 text-xs text-stone-500">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z"/></svg>
+      ${label}</span>`;
+  }
 
-    if (isCompact) {
-      return `
-        <div class="flex items-center gap-4 py-2.5 first:pt-0 last:pb-0">
-          <div class="flex-shrink-0 w-10 text-center">
-            <p class="text-lg font-bold text-stone-900 leading-none">${day}</p>
-            <p class="text-[10px] text-stone-500 uppercase tracking-wider">${month}</p>
-          </div>
-          <div class="min-w-0 flex-1 flex items-center gap-3">
-            <div class="min-w-0 flex-1">
-              <div class="flex items-baseline gap-2">
-                <h3 class="font-display text-sm font-semibold text-stone-900 truncate">${title}</h3>
-                <span class="flex-shrink-0 text-xs text-stone-400">${timeInfo}</span>
-              </div>
-              ${location ? `<p class="text-xs text-stone-400 truncate">${location}</p>` : ''}
-              ${attachmentsHtml}
-            </div>
-            <a
-              href="${addUrl}"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Zum Kalender hinzufügen"
-              class="flex-shrink-0 p-1 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors"
-            >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-            </a>
-          </div>
+  function renderCompact(ev: AjvEvent): string {
+    const d = startDate(ev);
+    const canceled = ev.status === 'canceled';
+    return `
+      <div class="flex items-center gap-4 py-2.5 first:pt-0 last:pb-0">
+        <div class="flex-shrink-0 w-10 text-center">
+          <p class="text-lg font-bold text-stone-900 leading-none ${canceled ? 'line-through text-stone-400' : ''}">${d.getDate()}</p>
+          <p class="text-[10px] text-stone-500 uppercase tracking-wider">${MONTHS[d.getMonth()]}</p>
         </div>
-      `;
-    }
+        <div class="min-w-0 flex-1 flex items-center gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-baseline gap-2">
+              <h3 class="font-display text-sm font-semibold text-stone-900 truncate ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
+              <span class="flex-shrink-0 text-xs text-stone-400">${formatTimeInfo(ev)}</span>
+            </div>
+            ${ev.place ? `<p class="text-xs text-stone-400 truncate">${ev.place}</p>` : ''}
+          </div>
+          <a href="${addToGCalUrl(ev)}" target="_blank" rel="noopener noreferrer" title="Zum Kalender hinzufügen"
+             class="flex-shrink-0 p-1 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          </a>
+        </div>
+      </div>`;
+  }
+
+  function renderCard(ev: AjvEvent): string {
+    const d = startDate(ev);
+    const canceled = ev.status === 'canceled';
+    const color = ev.calendarColor || '#2A57C5';
+    const img = imageFor(ev);
+    const media = img
+      ? `<img src="${img}" alt="" loading="lazy" class="w-full sm:w-40 h-32 sm:h-auto object-cover rounded-lg" />`
+      : `<div class="hidden sm:flex w-40 rounded-lg items-center justify-center" style="background:${color}14">
+           <div class="text-center">
+             <p class="text-3xl font-bold" style="color:${color}">${d.getDate()}</p>
+             <p class="text-xs uppercase tracking-wider" style="color:${color}">${MONTHS[d.getMonth()]}</p>
+           </div>
+         </div>`;
 
     return `
-      <div class="flex gap-5 py-4 first:pt-0 last:pb-0">
-        <div class="flex-shrink-0 w-14 text-center">
-          <p class="text-xs font-semibold text-brand-600 uppercase tracking-wider">${weekday}</p>
-          <p class="text-2xl font-bold text-stone-900 leading-tight">${day}</p>
-          <p class="text-xs text-stone-500 uppercase tracking-wider">${month}</p>
-        </div>
+      <article class="flex flex-col sm:flex-row gap-5 py-6 first:pt-0 last:pb-0">
+        <div class="flex-shrink-0">${media}</div>
         <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2 mb-1.5">
+            <span class="text-xs font-semibold text-brand-600 uppercase tracking-wider">${WEEKDAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS[d.getMonth()]}</span>
+            ${tagBadge(ev)}
+            ${canceledBadge(ev)}
+          </div>
           <div class="flex items-start justify-between gap-3">
-            <h3 class="font-display font-semibold text-stone-900 leading-snug">${title}</h3>
-            <a
-              href="${addUrl}"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Zum Kalender hinzufügen"
-              class="flex-shrink-0 mt-0.5 p-1.5 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
+            <h3 class="font-display text-lg font-semibold text-stone-900 leading-snug ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
+            <a href="${addToGCalUrl(ev)}" target="_blank" rel="noopener noreferrer" title="Zum Kalender hinzufügen"
+               class="flex-shrink-0 mt-0.5 p-1.5 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             </a>
           </div>
-          <p class="mt-1 text-sm text-stone-500">${timeInfo}</p>
-          ${location ? `<p class="mt-0.5 text-sm text-stone-400 truncate">${location}</p>` : ''}
-          ${attachmentsHtml}
+          <div class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
+            <span>${formatTimeInfo(ev)}</span>
+            ${ev.place ? `<span class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${ev.place}</span>` : ''}
+            ${signupInfo(ev)}
+          </div>
+          ${ev.descriptionHtml ? `<div class="mt-2 text-sm text-stone-600 leading-relaxed prose-links">${ev.descriptionHtml}</div>` : ''}
         </div>
-      </div>
-    `;
+      </article>`;
   }
 
-  async function loadEvents() {
+  function visibleEvents(): AjvEvent[] {
+    let list = allEvents;
+    if (!isCompact && activeCalendars.size > 0) {
+      list = list.filter((e) => !e.calendar || activeCalendars.has(e.calendar));
+    }
+    return list.slice(0, maxEvents);
+  }
+
+  function renderList() {
+    const list = visibleEvents();
+    if (list.length === 0) {
+      itemsEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    if (isCompact) {
+      itemsEl.className = 'divide-y divide-stone-100';
+      itemsEl.innerHTML = list.map(renderCompact).join('');
+    } else {
+      itemsEl.className = 'divide-y divide-stone-200';
+      itemsEl.innerHTML = list.map(renderCard).join('');
+    }
+    itemsEl.classList.remove('hidden');
+  }
+
+  function renderFilters() {
+    if (isCompact || calendarsInData.length < 2) return;
+    filtersEl.innerHTML =
+      `<span class="text-xs text-stone-400 uppercase tracking-wider font-semibold mr-1">Filter</span>` +
+      calendarsInData
+        .map((cal) => {
+          const on = activeCalendars.has(cal);
+          return `<button type="button" data-cal="${cal}"
+            class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+              on
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'bg-white text-stone-500 border-stone-300 hover:border-brand-400'
+            }">${cal}</button>`;
+        })
+        .join('');
+    filtersEl.classList.remove('hidden');
+
+    filtersEl.querySelectorAll<HTMLButtonElement>('button[data-cal]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cal = btn.dataset.cal!;
+        if (activeCalendars.has(cal)) {
+          if (activeCalendars.size > 1) activeCalendars.delete(cal); // keep at least one
+        } else {
+          activeCalendars.add(cal);
+        }
+        try {
+          sessionStorage.setItem(FILTER_KEY, JSON.stringify([...activeCalendars]));
+        } catch {}
+        renderFilters();
+        renderList();
+      });
+    });
+  }
+
+  async function load() {
     try {
-      const now = new Date().toISOString();
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&timeMin=${now}&maxResults=${maxEvents}&singleEvents=true&orderBy=startTime&supportsAttachments=true`;
-
-      const res = await fetch(url);
+      const res = await fetch('/api/events');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const data = await res.json();
-      const events = data.items || [];
+      allEvents = (data.events || []) as AjvEvent[];
 
       loadingEl.classList.add('hidden');
 
-      if (events.length === 0) {
+      if (allEvents.length === 0) {
         emptyEl.classList.remove('hidden');
         return;
       }
 
-      itemsEl.innerHTML = events.map(renderEvent).join('');
-      itemsEl.classList.remove('hidden');
-      subscribeEl.classList.remove('hidden');
+      // Distinct calendars actually present, in the API's calendar order.
+      const order: string[] = data.calendars || [];
+      const present = new Set(allEvents.map((e) => e.calendar).filter(Boolean));
+      calendarsInData = order.filter((c) => present.has(c));
+
+      // Restore saved filter, else all on.
+      let saved: string[] | null = null;
+      try {
+        saved = JSON.parse(sessionStorage.getItem(FILTER_KEY) || 'null');
+      } catch {}
+      activeCalendars = new Set(
+        saved ? saved.filter((c) => calendarsInData.includes(c)) : calendarsInData
+      );
+      if (activeCalendars.size === 0) activeCalendars = new Set(calendarsInData);
+
+      renderFilters();
+      renderList();
     } catch (e) {
-      console.error('Failed to load calendar events:', e);
+      console.error('Failed to load events:', e);
       loadingEl.classList.add('hidden');
       errorEl.classList.remove('hidden');
     }
   }
 
-  loadEvents();
+  load();
 </script>
+
+<style>
+  /* Ensure links inside event descriptions are visibly clickable. */
+  .prose-links :global(a) {
+    color: var(--color-brand-600);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose-links :global(a:hover) {
+    color: var(--color-brand-700);
+  }
+</style>
