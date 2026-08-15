@@ -1,22 +1,29 @@
 ---
-// Renders upcoming AJV events from the /api/events Netlify Function (Webling REST).
-// - compact: condensed rows for the homepage (no filter chips)
-// - full:    cards with calendar tag filter chips, image, description, signup
+// Renders AJV events from the /api/events Netlify Function (Webling REST).
+// - compact: condensed rows (homepage), no filter chips
+// - full:    cards with calendar tag filter chips + past toggle
+// - calendars: optional allowlist — only show events from these calendars
+//   (used on the homepage to split "AJV" from "Kantonalkader & SMM")
+//
+// The component supports MULTIPLE instances per page: the hoisted <script> runs
+// once, then initialises every .event-list root it finds, scoped to that root.
 interface Props {
   maxEvents?: number;
   compact?: boolean;
+  calendars?: string[];
 }
 
-const { maxEvents = 6, compact = false } = Astro.props;
+const { maxEvents = 6, compact = false, calendars = [] } = Astro.props;
 ---
 
 <div
-  id="event-list"
+  class="event-list"
   data-max-events={maxEvents}
   data-compact={compact ? 'true' : 'false'}
+  data-calendars={calendars.join(',')}
 >
   <!-- Loading -->
-  <div id="event-loading" class="flex items-center justify-center py-12">
+  <div data-el="loading" class="flex items-center justify-center py-12">
     <div class="flex items-center gap-3 text-stone-400">
       <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -27,21 +34,21 @@ const { maxEvents = 6, compact = false } = Astro.props;
   </div>
 
   <!-- Error -->
-  <div id="event-error" class="hidden py-8 text-center">
+  <div data-el="error" class="hidden py-8 text-center">
     <p class="text-sm text-stone-500">Kalender konnte nicht geladen werden.</p>
   </div>
 
   <!-- Filters + past toggle (full mode only) -->
-  <div id="event-controls" class="hidden mb-6 flex flex-wrap items-center justify-between gap-3">
-    <div id="event-filters" class="flex flex-wrap items-center gap-2"></div>
-    <div id="event-pasttoggle"></div>
+  <div data-el="controls" class="hidden mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div data-el="filters" class="flex flex-wrap items-center gap-2"></div>
+    <div data-el="pasttoggle"></div>
   </div>
 
   <!-- Events -->
-  <div id="event-items" class="hidden"></div>
+  <div data-el="items" class="hidden"></div>
 
   <!-- Empty -->
-  <div id="event-empty" class="hidden py-8 text-center">
+  <div data-el="empty" class="hidden py-8 text-center">
     <p class="text-sm text-stone-500">Keine kommenden Veranstaltungen.</p>
   </div>
 </div>
@@ -57,324 +64,375 @@ const { maxEvents = 6, compact = false } = Astro.props;
     addToGCalUrl,
   } from '../lib/eventFormat';
 
-  const container = document.getElementById('event-list')!;
-  const maxEvents = parseInt(container.dataset.maxEvents || '6', 10);
-  const isCompact = container.dataset.compact === 'true';
-
-  const loadingEl = document.getElementById('event-loading')!;
-  const errorEl = document.getElementById('event-error')!;
-  const controlsEl = document.getElementById('event-controls')!;
-  const filtersEl = document.getElementById('event-filters')!;
-  const pastToggleEl = document.getElementById('event-pasttoggle')!;
-  const itemsEl = document.getElementById('event-items')!;
-  const emptyEl = document.getElementById('event-empty')!;
-
   const FILTER_KEY = 'ajv-event-filter';
   const PAST_KEY = 'ajv-event-showpast';
+  const DEFAULT_CALENDAR = 'AJV'; // full view: only AJV selected by default
 
-  let allEvents: AjvEvent[] = [];
-  let calendarOrder: string[] = []; // all calendars from the API, in their order
-  let calendarsInData: string[] = []; // calendars actually present in loaded events
-  let activeCalendars = new Set<string>();
-
-  // Rebuild the list of present calendars from upcoming + (loaded) past events.
-  // Calendars that appear for the first time become active by default so their
-  // events aren't hidden by the filter.
-  function recomputeCalendars() {
-    const present = new Set<string>();
-    for (const e of allEvents) if (e.calendar) present.add(e.calendar);
-    if (pastEvents) for (const e of pastEvents) if (e.calendar) present.add(e.calendar);
-    const prev = new Set(calendarsInData);
-    calendarsInData = calendarOrder.filter((c) => present.has(c));
-    for (const c of calendarsInData) if (!prev.has(c)) activeCalendars.add(c);
+  // Shared, memoised fetches so multiple instances on one page (e.g. the two
+  // homepage cards) don't each hit /api/events.
+  let upcomingPromise: Promise<any> | null = null;
+  let pastPromise: Promise<any> | null = null;
+  function fetchUpcoming() {
+    if (!upcomingPromise) {
+      upcomingPromise = fetch('/api/events').then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      });
+    }
+    return upcomingPromise;
+  }
+  function fetchPast() {
+    if (!pastPromise) {
+      pastPromise = fetch('/api/events?past=1').then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      });
+    }
+    return pastPromise;
   }
 
-  // Past events are loaded lazily (own API call) the first time the toggle is on.
-  let showPast = false;
-  let pastEvents: AjvEvent[] | null = null;
-  let pastLoading = false;
+  function initEventList(root: HTMLElement) {
+    const maxEvents = parseInt(root.dataset.maxEvents || '6', 10);
+    const isCompact = root.dataset.compact === 'true';
+    // Allowlist: only show these calendars (empty = all).
+    const restrictCalendars = (root.dataset.calendars || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
 
-  function tagBadge(ev: AjvEvent): string {
-    if (!ev.calendar) return '';
-    const color = ev.calendarColor || '#2A57C5';
-    return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style="color:${color};background:${color}1a">
-      <span class="w-1.5 h-1.5 rounded-full" style="background:${color}"></span>${ev.calendar}</span>`;
-  }
+    const q = (name: string) => root.querySelector<HTMLElement>(`[data-el="${name}"]`)!;
+    const loadingEl = q('loading');
+    const errorEl = q('error');
+    const controlsEl = q('controls');
+    const filtersEl = q('filters');
+    const pastToggleEl = q('pasttoggle');
+    const itemsEl = q('items');
+    const emptyEl = q('empty');
 
-  function canceledBadge(ev: AjvEvent): string {
-    return ev.status === 'canceled'
-      ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-red-600 bg-red-50">Abgesagt</span>`
-      : '';
-  }
+    let allEvents: AjvEvent[] = [];
+    let calendarOrder: string[] = [];
+    let calendarsInData: string[] = [];
+    let activeCalendars = new Set<string>();
 
-  function signupInfo(ev: AjvEvent): string {
-    if (!ev.signup) return '';
-    const { max, count } = ev.signup;
-    const label = max ? `${count}/${max} Plätze` : `${count} Anmeldungen`;
-    return `<span class="inline-flex items-center gap-1.5 text-xs text-stone-500">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z"/></svg>
-      ${label}</span>`;
-  }
+    let showPast = false;
+    let pastEvents: AjvEvent[] | null = null;
+    let pastLoading = false;
 
-  function renderCompact(ev: AjvEvent): string {
-    const d = startDate(ev);
-    const canceled = ev.status === 'canceled';
-    return `
-      <div ${ev.id != null ? `data-id="${ev.id}" role="link" tabindex="0"` : ''} class="flex items-center gap-4 py-2.5 first:pt-0 last:pb-0 ${ev.id != null ? 'cursor-pointer group' : ''}">
-        <div class="flex-shrink-0 w-10 text-center">
-          <p class="text-lg font-bold text-stone-900 leading-none ${canceled ? 'line-through text-stone-400' : ''}">${d.getDate()}</p>
-          <p class="text-[10px] text-stone-500 uppercase tracking-wider">${MONTHS[d.getMonth()]}</p>
-        </div>
-        <div class="min-w-0 flex-1 flex items-center gap-3">
-          <div class="min-w-0 flex-1">
-            <div class="flex items-baseline gap-2">
-              <h3 class="font-display text-sm font-semibold text-stone-900 truncate group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
-              <span class="flex-shrink-0 text-xs text-stone-400">${formatTimeInfo(ev)}</span>
+    // Present calendars (respecting the allowlist), in the API's order.
+    function recomputeCalendars() {
+      const present = new Set<string>();
+      for (const e of allEvents) if (e.calendar) present.add(e.calendar);
+      if (pastEvents) for (const e of pastEvents) if (e.calendar) present.add(e.calendar);
+      calendarsInData = calendarOrder.filter(
+        (c) => present.has(c) && (!restrictCalendars.length || restrictCalendars.includes(c))
+      );
+    }
+
+    // Restrict to the allowlisted calendars (applies to both modes).
+    function baseFilter(list: AjvEvent[]): AjvEvent[] {
+      if (!restrictCalendars.length) return list;
+      return list.filter((e) => e.calendar && restrictCalendars.includes(e.calendar));
+    }
+
+    // Full-view chip filter (no-op in compact mode).
+    function applyFilter(list: AjvEvent[]): AjvEvent[] {
+      if (!isCompact && activeCalendars.size > 0) {
+        return list.filter((e) => !e.calendar || activeCalendars.has(e.calendar));
+      }
+      return list;
+    }
+
+    function tagBadge(ev: AjvEvent): string {
+      if (!ev.calendar) return '';
+      const color = ev.calendarColor || '#2A57C5';
+      return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style="color:${color};background:${color}1a">
+        <span class="w-1.5 h-1.5 rounded-full" style="background:${color}"></span>${ev.calendar}</span>`;
+    }
+
+    function canceledBadge(ev: AjvEvent): string {
+      return ev.status === 'canceled'
+        ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-red-600 bg-red-50">Abgesagt</span>`
+        : '';
+    }
+
+    function signupInfo(ev: AjvEvent): string {
+      if (!ev.signup) return '';
+      const { max, count } = ev.signup;
+      const label = max ? `${count}/${max} Plätze` : `${count} Anmeldungen`;
+      return `<span class="inline-flex items-center gap-1.5 text-xs text-stone-500">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z"/></svg>
+        ${label}</span>`;
+    }
+
+    function renderCompact(ev: AjvEvent): string {
+      const d = startDate(ev);
+      const canceled = ev.status === 'canceled';
+      return `
+        <div ${ev.id != null ? `data-id="${ev.id}" role="link" tabindex="0"` : ''} class="flex items-center gap-4 py-2.5 first:pt-0 last:pb-0 ${ev.id != null ? 'cursor-pointer group' : ''}">
+          <div class="flex-shrink-0 w-10 text-center">
+            <p class="text-lg font-bold text-stone-900 leading-none ${canceled ? 'line-through text-stone-400' : ''}">${d.getDate()}</p>
+            <p class="text-[10px] text-stone-500 uppercase tracking-wider">${MONTHS[d.getMonth()]}</p>
+          </div>
+          <div class="min-w-0 flex-1 flex items-center gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline gap-2">
+                <h3 class="font-display text-sm font-semibold text-stone-900 truncate group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
+                <span class="flex-shrink-0 text-xs text-stone-400">${formatTimeInfo(ev)}</span>
+              </div>
+              ${ev.place ? `<p class="text-xs text-stone-400 truncate">${ev.place}</p>` : ''}
             </div>
-            ${ev.place ? `<p class="text-xs text-stone-400 truncate">${ev.place}</p>` : ''}
-          </div>
-          <a href="${addToGCalUrl(ev)}" target="_blank" rel="noopener noreferrer" title="Zum Kalender hinzufügen"
-             class="flex-shrink-0 p-1 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          </a>
-        </div>
-      </div>`;
-  }
-
-  function renderCard(ev: AjvEvent): string {
-    const d = startDate(ev);
-    const canceled = ev.status === 'canceled';
-    const color = ev.calendarColor || '#2A57C5';
-    const img = imageFor(ev);
-    const media = img
-      ? `<img src="${img}" alt="" loading="lazy" class="w-full sm:w-40 h-32 sm:h-auto object-cover rounded-lg" />`
-      : `<div class="hidden sm:flex w-40 rounded-lg items-center justify-center" style="background:${color}14">
-           <div class="text-center">
-             <p class="text-3xl font-bold" style="color:${color}">${d.getDate()}</p>
-             <p class="text-xs uppercase tracking-wider" style="color:${color}">${MONTHS[d.getMonth()]}</p>
-           </div>
-         </div>`;
-
-    return `
-      <article ${ev.id != null ? `data-id="${ev.id}" role="link" tabindex="0"` : ''} class="flex flex-col sm:flex-row gap-5 py-6 first:pt-0 last:pb-0 ${ev.id != null ? 'cursor-pointer group' : ''}">
-        <div class="flex-shrink-0">${media}</div>
-        <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-2 mb-1.5">
-            <span class="text-xs font-semibold text-brand-600 uppercase tracking-wider">${WEEKDAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS[d.getMonth()]}</span>
-            ${tagBadge(ev)}
-            ${canceledBadge(ev)}
-          </div>
-          <div class="flex items-start justify-between gap-3">
-            <h3 class="font-display text-lg font-semibold text-stone-900 leading-snug group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
             <a href="${addToGCalUrl(ev)}" target="_blank" rel="noopener noreferrer" title="Zum Kalender hinzufügen"
-               class="flex-shrink-0 mt-0.5 p-1.5 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+               class="flex-shrink-0 p-1 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             </a>
           </div>
-          <div class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
-            <span>${formatTimeInfo(ev)}</span>
-            ${ev.place ? `<span class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${ev.place}</span>` : ''}
-            ${signupInfo(ev)}
-          </div>
-          ${ev.descriptionHtml ? `<div class="mt-2 text-sm text-stone-600 leading-relaxed prose-links">${ev.descriptionHtml}</div>` : ''}
-        </div>
-      </article>`;
-  }
-
-  function applyFilter(list: AjvEvent[]): AjvEvent[] {
-    if (!isCompact && activeCalendars.size > 0) {
-      return list.filter((e) => !e.calendar || activeCalendars.has(e.calendar));
-    }
-    return list;
-  }
-
-  function renderList() {
-    const render = isCompact ? renderCompact : renderCard;
-    const divide = isCompact ? 'divide-y divide-stone-100' : 'divide-y divide-stone-200';
-
-    const upcoming = applyFilter(allEvents).slice(0, maxEvents);
-    // The homepage (compact) never shows past events, regardless of stored state.
-    const past = !isCompact && showPast && pastEvents ? applyFilter(pastEvents).slice(0, maxEvents) : [];
-
-    if (upcoming.length === 0 && past.length === 0) {
-      itemsEl.classList.add('hidden');
-      emptyEl.classList.remove('hidden');
-      return;
-    }
-    emptyEl.classList.add('hidden');
-
-    let html = `<div class="${divide}">${upcoming.map(render).join('')}</div>`;
-    if (past.length > 0) {
-      html += `
-        <div class="mt-8 pt-6 border-t border-stone-200">
-          <h3 class="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Vergangene Termine</h3>
-          <div class="${divide} opacity-70">${past.map(render).join('')}</div>
         </div>`;
     }
-    itemsEl.className = '';
-    itemsEl.innerHTML = html;
-    itemsEl.classList.remove('hidden');
-    attachItemHandlers();
-  }
 
-  // Make each event row/card navigate to its detail page. Inner links
-  // (add-to-calendar, links in the description) keep their own behaviour.
-  function attachItemHandlers() {
-    itemsEl.querySelectorAll<HTMLElement>('[data-id]').forEach((el) => {
-      const id = el.dataset.id!;
-      const go = () => { window.location.href = `/veranstaltung?id=${id}`; };
-      el.addEventListener('click', go);
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          go();
-        }
+    function renderCard(ev: AjvEvent): string {
+      const d = startDate(ev);
+      const canceled = ev.status === 'canceled';
+      const color = ev.calendarColor || '#2A57C5';
+      const img = imageFor(ev);
+      const media = img
+        ? `<img src="${img}" alt="" loading="lazy" class="w-full sm:w-40 h-32 sm:h-auto object-cover rounded-lg" />`
+        : `<div class="hidden sm:flex w-40 rounded-lg items-center justify-center" style="background:${color}14">
+             <div class="text-center">
+               <p class="text-3xl font-bold" style="color:${color}">${d.getDate()}</p>
+               <p class="text-xs uppercase tracking-wider" style="color:${color}">${MONTHS[d.getMonth()]}</p>
+             </div>
+           </div>`;
+
+      return `
+        <article ${ev.id != null ? `data-id="${ev.id}" role="link" tabindex="0"` : ''} class="flex flex-col sm:flex-row gap-5 py-6 first:pt-0 last:pb-0 ${ev.id != null ? 'cursor-pointer group' : ''}">
+          <div class="flex-shrink-0">${media}</div>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+              <span class="text-xs font-semibold text-brand-600 uppercase tracking-wider">${WEEKDAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS[d.getMonth()]}</span>
+              ${tagBadge(ev)}
+              ${canceledBadge(ev)}
+            </div>
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="font-display text-lg font-semibold text-stone-900 leading-snug group-hover:text-brand-600 transition-colors ${canceled ? 'line-through text-stone-400' : ''}">${ev.title}</h3>
+              <a href="${addToGCalUrl(ev)}" target="_blank" rel="noopener noreferrer" title="Zum Kalender hinzufügen"
+                 class="flex-shrink-0 mt-0.5 p-1.5 text-stone-300 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              </a>
+            </div>
+            <div class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
+              <span>${formatTimeInfo(ev)}</span>
+              ${ev.place ? `<span class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${ev.place}</span>` : ''}
+              ${signupInfo(ev)}
+            </div>
+            ${ev.descriptionHtml ? `<div class="mt-2 text-sm text-stone-600 leading-relaxed prose-links">${ev.descriptionHtml}</div>` : ''}
+          </div>
+        </article>`;
+    }
+
+    function renderList() {
+      const render = isCompact ? renderCompact : renderCard;
+      const divide = isCompact ? 'divide-y divide-stone-100' : 'divide-y divide-stone-200';
+
+      const upcoming = applyFilter(baseFilter(allEvents)).slice(0, maxEvents);
+      // Compact (homepage) never shows past events, regardless of stored state.
+      const past =
+        !isCompact && showPast && pastEvents ? applyFilter(baseFilter(pastEvents)).slice(0, maxEvents) : [];
+
+      if (upcoming.length === 0 && past.length === 0) {
+        itemsEl.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+
+      let html = `<div class="${divide}">${upcoming.map(render).join('')}</div>`;
+      if (past.length > 0) {
+        html += `
+          <div class="mt-8 pt-6 border-t border-stone-200">
+            <h3 class="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Vergangene Termine</h3>
+            <div class="${divide} opacity-70">${past.map(render).join('')}</div>
+          </div>`;
+      }
+      itemsEl.className = '';
+      itemsEl.innerHTML = html;
+      itemsEl.classList.remove('hidden');
+      attachItemHandlers();
+    }
+
+    // Each row/card navigates to its detail page; inner links keep their behaviour.
+    function attachItemHandlers() {
+      itemsEl.querySelectorAll<HTMLElement>('[data-id]').forEach((el) => {
+        const id = el.dataset.id!;
+        const go = () => {
+          window.location.href = `/veranstaltung?id=${id}`;
+        };
+        el.addEventListener('click', go);
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            go();
+          }
+        });
       });
-    });
-    itemsEl.querySelectorAll('a').forEach((a) => {
-      a.addEventListener('click', (e) => e.stopPropagation());
-    });
-  }
-
-  function renderControls() {
-    if (isCompact) return;
-    renderFilters();
-    renderPastToggle();
-    controlsEl.classList.remove('hidden');
-  }
-
-  function renderFilters() {
-    if (calendarsInData.length < 2) {
-      filtersEl.innerHTML = '';
-      return;
-    }
-    filtersEl.innerHTML =
-      `<span class="text-xs text-stone-400 uppercase tracking-wider font-semibold mr-1">Filter</span>` +
-      calendarsInData
-        .map((cal) => {
-          const on = activeCalendars.has(cal);
-          return `<button type="button" data-cal="${cal}"
-            class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-              on
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'bg-white text-stone-500 border-stone-300 hover:border-brand-400'
-            }">${cal}</button>`;
-        })
-        .join('');
-
-    filtersEl.querySelectorAll<HTMLButtonElement>('button[data-cal]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const cal = btn.dataset.cal!;
-        if (activeCalendars.has(cal)) {
-          if (activeCalendars.size > 1) activeCalendars.delete(cal); // keep at least one
-        } else {
-          activeCalendars.add(cal);
-        }
-        try {
-          sessionStorage.setItem(FILTER_KEY, JSON.stringify([...activeCalendars]));
-        } catch {}
-        renderFilters();
-        renderList();
+      itemsEl.querySelectorAll('a').forEach((a) => {
+        a.addEventListener('click', (e) => e.stopPropagation());
       });
-    });
-  }
-
-  function renderPastToggle() {
-    const label = pastLoading ? 'Vergangene Termine werden geladen…' : 'Vergangene Termine anzeigen';
-    pastToggleEl.innerHTML = `
-      <button type="button" id="past-btn" role="switch" aria-checked="${showPast}"
-        class="inline-flex items-center gap-2 text-xs font-semibold text-stone-500 hover:text-stone-700 transition-colors">
-        <span class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-          showPast ? 'bg-brand-600' : 'bg-stone-300'
-        }">
-          <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-            showPast ? 'translate-x-4' : 'translate-x-0.5'
-          }"></span>
-        </span>
-        ${label}
-      </button>`;
-    document.getElementById('past-btn')!.addEventListener('click', togglePast);
-  }
-
-  async function loadPast() {
-    try {
-      const res = await fetch('/api/events?past=1');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      pastEvents = (data.events || []) as AjvEvent[];
-    } catch (e) {
-      console.error('Failed to load past events:', e);
-      pastEvents = []; // don't retry endlessly; toggle just shows nothing
     }
-  }
 
-  async function togglePast() {
-    showPast = !showPast;
-    try {
-      sessionStorage.setItem(PAST_KEY, showPast ? '1' : '0');
-    } catch {}
-    if (showPast && pastEvents === null && !pastLoading) {
-      pastLoading = true;
+    function renderControls() {
+      if (isCompact) return;
+      renderFilters();
       renderPastToggle();
-      await loadPast();
-      pastLoading = false;
-      recomputeCalendars();
-      renderControls(); // refresh chips in case a past-only calendar appeared
-    } else {
-      renderPastToggle();
+      controlsEl.classList.remove('hidden');
     }
-    renderList();
-  }
 
-  async function load() {
-    try {
-      const res = await fetch('/api/events');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      allEvents = (data.events || []) as AjvEvent[];
+    function renderFilters() {
+      if (calendarsInData.length < 2) {
+        filtersEl.innerHTML = '';
+        return;
+      }
+      filtersEl.innerHTML =
+        `<span class="text-xs text-stone-400 uppercase tracking-wider font-semibold mr-1">Filter</span>` +
+        calendarsInData
+          .map((cal) => {
+            const on = activeCalendars.has(cal);
+            return `<button type="button" data-cal="${cal}"
+              class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                on
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white text-stone-500 border-stone-300 hover:border-brand-400'
+              }">${cal}</button>`;
+          })
+          .join('');
 
-      loadingEl.classList.add('hidden');
+      filtersEl.querySelectorAll<HTMLButtonElement>('button[data-cal]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const cal = btn.dataset.cal!;
+          if (activeCalendars.has(cal)) {
+            if (activeCalendars.size > 1) activeCalendars.delete(cal); // keep at least one
+          } else {
+            activeCalendars.add(cal);
+          }
+          persistSelection();
+          renderFilters();
+          renderList();
+        });
+      });
+    }
 
-      // Present calendars (in the API's order), then apply any saved filter.
-      calendarOrder = (data.calendars || []) as string[];
-      recomputeCalendars(); // seeds activeCalendars with all present calendars
-      let saved: string[] | null = null;
+    function renderPastToggle() {
+      const label = pastLoading ? 'Vergangene Termine werden geladen…' : 'Vergangene Termine anzeigen';
+      pastToggleEl.innerHTML = `
+        <button type="button" role="switch" aria-checked="${showPast}"
+          class="inline-flex items-center gap-2 text-xs font-semibold text-stone-500 hover:text-stone-700 transition-colors">
+          <span class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+            showPast ? 'bg-brand-600' : 'bg-stone-300'
+          }">
+            <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+              showPast ? 'translate-x-4' : 'translate-x-0.5'
+            }"></span>
+          </span>
+          ${label}
+        </button>`;
+      pastToggleEl.querySelector('button')!.addEventListener('click', togglePast);
+    }
+
+    // Persist the calendar selection to sessionStorage and reflect it in the URL
+    // (?kalender=…) so filtered views can be shared by link.
+    function persistSelection() {
       try {
-        saved = JSON.parse(sessionStorage.getItem(FILTER_KEY) || 'null');
+        sessionStorage.setItem(FILTER_KEY, JSON.stringify([...activeCalendars]));
       } catch {}
-      if (saved) {
-        activeCalendars = new Set(saved.filter((c) => calendarsInData.includes(c)));
+      const value = calendarsInData.filter((c) => activeCalendars.has(c)).join(',');
+      history.replaceState(null, '', value ? `${location.pathname}?kalender=${value}` : location.pathname);
+    }
+
+    // Initial selection: URL (?kalender=) > sessionStorage > default (AJV only).
+    function initialSelection(): Set<string> {
+      const urlParam = new URLSearchParams(location.search).get('kalender');
+      if (urlParam) {
+        const valid = urlParam.split(',').map((s) => s.trim()).filter((c) => calendarsInData.includes(c));
+        if (valid.length) return new Set(valid);
       }
-      if (activeCalendars.size === 0) activeCalendars = new Set(calendarsInData);
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(FILTER_KEY) || 'null');
+        if (Array.isArray(saved)) {
+          const valid = saved.filter((c: string) => calendarsInData.includes(c));
+          if (valid.length) return new Set(valid);
+        }
+      } catch {}
+      if (calendarsInData.includes(DEFAULT_CALENDAR)) return new Set([DEFAULT_CALENDAR]);
+      return new Set(calendarsInData);
+    }
 
-      // Past events only ever apply to the full view — never the homepage.
-      if (!isCompact) {
-        try {
-          showPast = sessionStorage.getItem(PAST_KEY) === '1';
-        } catch {}
+    async function loadPast() {
+      try {
+        const data = await fetchPast();
+        pastEvents = (data.events || []) as AjvEvent[];
+      } catch (e) {
+        console.error('Failed to load past events:', e);
+        pastEvents = [];
       }
+    }
 
-      renderControls();
-      renderList();
-
-      // If the toggle was left on, load past events now.
-      if (!isCompact && showPast && pastEvents === null && !pastLoading) {
+    async function togglePast() {
+      showPast = !showPast;
+      try {
+        sessionStorage.setItem(PAST_KEY, showPast ? '1' : '0');
+      } catch {}
+      if (showPast && pastEvents === null && !pastLoading) {
         pastLoading = true;
         renderPastToggle();
         await loadPast();
         pastLoading = false;
         recomputeCalendars();
         renderControls();
-        renderList();
+      } else {
+        renderPastToggle();
       }
-    } catch (e) {
-      console.error('Failed to load events:', e);
-      loadingEl.classList.add('hidden');
-      errorEl.classList.remove('hidden');
+      renderList();
     }
+
+    async function load() {
+      try {
+        const data = await fetchUpcoming();
+        allEvents = (data.events || []) as AjvEvent[];
+        loadingEl.classList.add('hidden');
+
+        calendarOrder = (data.calendars || []) as string[];
+        recomputeCalendars();
+
+        if (!isCompact) {
+          activeCalendars = initialSelection();
+          persistSelection(); // reflect the effective selection in the URL
+          try {
+            showPast = sessionStorage.getItem(PAST_KEY) === '1';
+          } catch {}
+        }
+
+        renderControls();
+        renderList();
+
+        if (!isCompact && showPast && pastEvents === null && !pastLoading) {
+          pastLoading = true;
+          renderPastToggle();
+          await loadPast();
+          pastLoading = false;
+          recomputeCalendars();
+          renderControls();
+          renderList();
+        }
+      } catch (e) {
+        console.error('Failed to load events:', e);
+        loadingEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    load();
   }
 
-  load();
+  document.querySelectorAll<HTMLElement>('.event-list').forEach(initEventList);
 </script>
 
 <style>

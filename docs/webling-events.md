@@ -19,9 +19,17 @@ Browser ──fetch──▶ /api/events (Netlify Function) ──REST──▶ 
    - setzt Cache-Header: Browser 60 s, CDN 5 min mit Hintergrund-Refresh
 2. **Komponente** `src/components/EventList.astro` holt `/api/events` und rendert die Liste.
    - Ein Klick auf einen Termin öffnet die **Detail-Ansicht** `/veranstaltung?id=<id>`.
-   - `compact` (Startseite): kompakte Zeilen, keine Filter
+   - `compact` (Startseite): kompakte Zeilen, keine Filter. Die Startseite zeigt
+     **zwei Karten nebeneinander** — links „AJV", rechts „Kantonalkader & SMM" —
+     über den Prop `calendars={[…]}` (Allowlist der Kalender pro Karte).
    - Vollansicht (Veranstaltungen): Karten mit **Kalender-Filter-Chips**
-     (AJV / Kantonalkader / SMM), Bild, Beschreibung, Anmelde-Infos
+     (AJV / Kantonalkader / SMM), Bild, Beschreibung, Anmelde-Infos.
+     **Standardmässig ist nur „AJV" ausgewählt.**
+   - **Permalinks:** die aktive Filter-Auswahl steht in der URL (`?kalender=AJV,SMM`)
+     und wird beim Umschalten aktualisiert — so lassen sich gefilterte Ansichten
+     per Link teilen. Reihenfolge beim Laden: URL > Session > Standard (AJV).
+   - Mehrere Instanzen pro Seite werden unterstützt (die zwei Startseiten-Karten
+     teilen sich einen einzigen `/api/events`-Abruf).
    - **Toggle „Vergangene Termine anzeigen"** (Vollansicht, standardmässig aus):
      lädt vergangene Events erst bei Bedarf über `/api/events?past=1`
      (letzte 12 Monate, neueste zuerst) und zeigt sie in einem eigenen Abschnitt.
