@@ -138,18 +138,25 @@ function normalizeEvent(obj, calendars) {
 
 export default async (req) => {
   const apiKey = process.env.WEBLING_API_KEY;
+  // Successful responses cache at the CDN and refresh in the background —
+  // dynamic, but never hammers Webling.
   const jsonHeaders = {
     'content-type': 'application/json; charset=utf-8',
-    // Browser caches briefly; the CDN serves cached copies for longer and
-    // refreshes in the background — dynamic, but never hammers Webling.
     'cache-control': 'public, max-age=60',
     'netlify-cdn-cache-control': 'public, s-maxage=300, stale-while-revalidate=600',
+  };
+  // Errors must NOT be cached, otherwise a misconfiguration (e.g. missing key)
+  // gets served as "no events" for the whole cache window.
+  const errorHeaders = {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store',
+    'netlify-cdn-cache-control': 'no-store',
   };
 
   if (!apiKey) {
     return new Response(
       JSON.stringify({ events: [], error: 'WEBLING_API_KEY not configured' }),
-      { status: 500, headers: jsonHeaders }
+      { status: 500, headers: errorHeaders }
     );
   }
 
@@ -173,7 +180,7 @@ export default async (req) => {
     const idParam = new URL(req.url).searchParams.get('id');
     if (idParam) {
       if (!/^\d+$/.test(idParam)) {
-        return new Response(JSON.stringify({ event: null }), { status: 400, headers: jsonHeaders });
+        return new Response(JSON.stringify({ event: null }), { status: 400, headers: errorHeaders });
       }
       let event = null;
       try {
@@ -186,7 +193,7 @@ export default async (req) => {
       }
       return new Response(JSON.stringify({ event }), {
         status: event ? 200 : 404,
-        headers: jsonHeaders,
+        headers: event ? jsonHeaders : errorHeaders,
       });
     }
 
@@ -232,10 +239,10 @@ export default async (req) => {
       { status: 200, headers: jsonHeaders }
     );
   } catch (err) {
-    // Never break the page — return an empty list and let the UI degrade.
+    // Never break the page — return an empty list (uncached) and let the UI degrade.
     return new Response(
       JSON.stringify({ events: [], error: String(err && err.message ? err.message : err) }),
-      { status: 200, headers: jsonHeaders }
+      { status: 200, headers: errorHeaders }
     );
   }
 };

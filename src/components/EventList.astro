@@ -60,6 +60,8 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     type AjvEvent,
     MONTHS,
     WEEKDAYS,
+    GROUP_ORDER,
+    calendarGroup,
     imageFor,
     startDate,
     formatTimeInfo,
@@ -68,7 +70,7 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
 
   const FILTER_KEY = 'ajv-event-filter';
   const PAST_KEY = 'ajv-event-showpast';
-  const DEFAULT_CALENDAR = 'AJV'; // full view: only AJV selected by default
+  const DEFAULT_GROUP = 'AJV'; // full view: only AJV selected by default
 
   // Shared, memoised fetches so multiple instances on one page (e.g. the two
   // homepage cards) don't each hit /api/events.
@@ -118,13 +120,14 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     let allEvents: AjvEvent[] = [];
     let calendarOrder: string[] = [];
     let calendarsInData: string[] = [];
-    let activeCalendars = new Set<string>();
+    let groupsInData: string[] = []; // filter groups present (AJV/Kantonalkader/SMM)
+    let activeGroups = new Set<string>();
 
     let showPast = false;
     let pastEvents: AjvEvent[] | null = null;
     let pastLoading = false;
 
-    // Present calendars (respecting the allowlist), in the API's order.
+    // Present calendars (respecting allow-/blocklist) + their filter groups.
     function recomputeCalendars() {
       const present = new Set<string>();
       for (const e of allEvents) if (e.calendar) present.add(e.calendar);
@@ -135,6 +138,8 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
           (!restrictCalendars.length || restrictCalendars.includes(c)) &&
           (!excludeCalendars.length || !excludeCalendars.includes(c))
       );
+      const presentGroups = new Set(calendarsInData.map(calendarGroup));
+      groupsInData = GROUP_ORDER.filter((g) => presentGroups.has(g));
     }
 
     // Restrict to the allow-/blocklisted calendars (applies to both modes).
@@ -145,10 +150,10 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
       return l;
     }
 
-    // Full-view chip filter (no-op in compact mode).
+    // Full-view chip filter by group (no-op in compact mode).
     function applyFilter(list: AjvEvent[]): AjvEvent[] {
-      if (!isCompact && activeCalendars.size > 0) {
-        return list.filter((e) => !e.calendar || activeCalendars.has(e.calendar));
+      if (!isCompact && activeGroups.size > 0) {
+        return list.filter((e) => !e.calendar || activeGroups.has(calendarGroup(e.calendar)));
       }
       return list;
     }
@@ -298,31 +303,31 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     }
 
     function renderFilters() {
-      if (calendarsInData.length < 2) {
+      if (groupsInData.length < 2) {
         filtersEl.innerHTML = '';
         return;
       }
       filtersEl.innerHTML =
         `<span class="text-xs text-stone-400 uppercase tracking-wider font-semibold mr-1">Filter</span>` +
-        calendarsInData
-          .map((cal) => {
-            const on = activeCalendars.has(cal);
-            return `<button type="button" data-cal="${cal}"
+        groupsInData
+          .map((group) => {
+            const on = activeGroups.has(group);
+            return `<button type="button" data-group="${group}"
               class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                 on
                   ? 'bg-brand-600 text-white border-brand-600'
                   : 'bg-white text-stone-500 border-stone-300 hover:border-brand-400'
-              }">${cal}</button>`;
+              }">${group}</button>`;
           })
           .join('');
 
-      filtersEl.querySelectorAll<HTMLButtonElement>('button[data-cal]').forEach((btn) => {
+      filtersEl.querySelectorAll<HTMLButtonElement>('button[data-group]').forEach((btn) => {
         btn.addEventListener('click', () => {
-          const cal = btn.dataset.cal!;
-          if (activeCalendars.has(cal)) {
-            if (activeCalendars.size > 1) activeCalendars.delete(cal); // keep at least one
+          const group = btn.dataset.group!;
+          if (activeGroups.has(group)) {
+            if (activeGroups.size > 1) activeGroups.delete(group); // keep at least one
           } else {
-            activeCalendars.add(cal);
+            activeGroups.add(group);
           }
           persistSelection();
           renderFilters();
@@ -348,13 +353,13 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
       pastToggleEl.querySelector('button')!.addEventListener('click', togglePast);
     }
 
-    // Persist the calendar selection to sessionStorage and reflect it in the URL
+    // Persist the group selection to sessionStorage and reflect it in the URL
     // (?kalender=…) so filtered views can be shared by link.
     function persistSelection() {
       try {
-        sessionStorage.setItem(FILTER_KEY, JSON.stringify([...activeCalendars]));
+        sessionStorage.setItem(FILTER_KEY, JSON.stringify([...activeGroups]));
       } catch {}
-      const value = calendarsInData.filter((c) => activeCalendars.has(c)).join(',');
+      const value = groupsInData.filter((g) => activeGroups.has(g)).join(',');
       history.replaceState(null, '', value ? `${location.pathname}?kalender=${value}` : location.pathname);
     }
 
@@ -362,18 +367,18 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     function initialSelection(): Set<string> {
       const urlParam = new URLSearchParams(location.search).get('kalender');
       if (urlParam) {
-        const valid = urlParam.split(',').map((s) => s.trim()).filter((c) => calendarsInData.includes(c));
+        const valid = urlParam.split(',').map((s) => s.trim()).filter((g) => groupsInData.includes(g));
         if (valid.length) return new Set(valid);
       }
       try {
         const saved = JSON.parse(sessionStorage.getItem(FILTER_KEY) || 'null');
         if (Array.isArray(saved)) {
-          const valid = saved.filter((c: string) => calendarsInData.includes(c));
+          const valid = saved.filter((g: string) => groupsInData.includes(g));
           if (valid.length) return new Set(valid);
         }
       } catch {}
-      if (calendarsInData.includes(DEFAULT_CALENDAR)) return new Set([DEFAULT_CALENDAR]);
-      return new Set(calendarsInData);
+      if (groupsInData.includes(DEFAULT_GROUP)) return new Set([DEFAULT_GROUP]);
+      return new Set(groupsInData);
     }
 
     async function loadPast() {
@@ -421,7 +426,7 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
         recomputeCalendars();
 
         if (!isCompact) {
-          activeCalendars = initialSelection();
+          activeGroups = initialSelection();
           persistSelection(); // reflect the effective selection in the URL
           try {
             showPast = sessionStorage.getItem(PAST_KEY) === '1';

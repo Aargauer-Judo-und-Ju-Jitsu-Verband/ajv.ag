@@ -16,15 +16,20 @@ Browser ──fetch──▶ /api/events (Netlify Function) ──REST──▶ 
    - holt kommende Events (`/calendarevent`, gefiltert auf `end > heute`, sortiert nach `begin`)
    - normalisiert sie zu sauberem JSON (Beschreibung wird bereinigt, blanke URLs
      werden verlinkt, Ganztags-/Mehrtages-Events erkannt, Anmeldungen, Absagen)
-   - setzt Cache-Header: Browser 60 s, CDN 5 min mit Hintergrund-Refresh
+   - **Erfolgs**-Antworten: Cache-Header Browser 60 s, CDN 5 min mit Hintergrund-
+     Refresh. **Fehler-/Leer-Antworten** (z. B. fehlender Key) werden `no-store`
+     ausgeliefert, damit eine Fehlkonfiguration nicht im CDN „hängen bleibt".
 2. **Komponente** `src/components/EventList.astro` holt `/api/events` und rendert die Liste.
    - Ein Klick auf einen Termin öffnet die **Detail-Ansicht** `/veranstaltung?id=<id>`.
    - `compact` (Startseite): kompakte Zeilen, keine Filter. Die Startseite zeigt
      **zwei Karten nebeneinander** — links „AJV", rechts „Kantonalkader & SMM" —
      über den Prop `calendars={[…]}` (Allowlist der Kalender pro Karte).
-   - Vollansicht (Veranstaltungen): Karten mit **Kalender-Filter-Chips**
-     (AJV / Kantonalkader / SMM), Bild, Beschreibung, Anmelde-Infos.
+   - Vollansicht (Veranstaltungen): Karten mit **Filter-Chips** (Gruppen
+     **AJV / Kantonalkader / SMM**), Bild, Beschreibung, Anmelde-Infos.
      **Standardmässig ist nur „AJV" ausgewählt.**
+     Webling teilt SMM in mehrere Team-Kalender auf (Judo Team Brugg, Mülimatt
+     Penguins, …); diese werden über `calendarGroup()` in `eventFormat.ts` zur
+     Gruppe „SMM" zusammengefasst (alles ausser AJV/Kantonalkader = SMM).
    - **Permalinks:** die aktive Filter-Auswahl steht in der URL (`?kalender=AJV,SMM`)
      und wird beim Umschalten aktualisiert — so lassen sich gefilterte Ansichten
      per Link teilen. Reihenfolge beim Laden: URL > Session > Standard (AJV).

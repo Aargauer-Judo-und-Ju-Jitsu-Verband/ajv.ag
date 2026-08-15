@@ -25,6 +25,17 @@ export interface AjvEvent {
   signup: Signup | null;
 }
 
+// Filter groups for the Veranstaltungen page. Webling splits SMM into one
+// calendar per team (Judo Team Brugg, Mülimatt Penguins, …); we present them as
+// a single "SMM" group. AJV and Kantonalkader are their own groups; everything
+// else counts as SMM.
+export const GROUP_ORDER = ['AJV', 'Kantonalkader', 'SMM'];
+export function calendarGroup(calendar: string): string {
+  if (calendar === 'AJV') return 'AJV';
+  if (calendar === 'Kantonalkader') return 'Kantonalkader';
+  return 'SMM';
+}
+
 export const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 export const MONTHS_LONG = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
