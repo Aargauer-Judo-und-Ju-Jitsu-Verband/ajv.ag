@@ -84,28 +84,35 @@ const posts = (await getCollection('blog'))
   <!-- Events Preview -->
   <section class="relative -mt-12 lg:-mt-20 z-10 pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="bg-white border border-stone-200 rounded-lg shadow-lg overflow-hidden">
-        <div class="p-6 lg:p-8">
-          <div class="flex items-end justify-between mb-6">
-            <div>
-              <p class="text-xs font-semibold text-brand-600 uppercase tracking-[0.3em] mb-2">Kalender</p>
-              <h2 class="font-display text-2xl lg:text-3xl font-bold text-stone-900">Nächste Veranstaltungen</h2>
-            </div>
-            <a
-              href="/veranstaltungen"
-              class="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors group"
-            >
-              Alle Termine
-              <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
+      <h2 class="sr-only">Nächste Veranstaltungen</h2>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- AJV -->
+        <div class="min-w-0 bg-white border border-stone-200 rounded-lg shadow-lg p-6 lg:p-8">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+            <h3 class="font-display text-xl font-bold text-stone-900">AJV Anlässe und Kurse</h3>
           </div>
-          <EventList maxEvents={6} compact />
-          <a href="/veranstaltungen" class="sm:hidden inline-flex items-center gap-2 mt-4 text-sm font-semibold text-brand-600">
-            Alle Termine &rarr;
-          </a>
+          <EventList maxEvents={5} compact calendars={['AJV']} />
         </div>
+        <!-- Kantonalkader & SMM -->
+        <div class="min-w-0 bg-white border border-stone-200 rounded-lg shadow-lg p-6 lg:p-8">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="w-2 h-2 rounded-full bg-stone-400"></span>
+            <h3 class="font-display text-xl font-bold text-stone-900">Kantonalkader &amp; SMM</h3>
+          </div>
+          <EventList maxEvents={5} compact exclude={['AJV']} />
+        </div>
+      </div>
+      <div class="mt-6 text-center">
+        <a
+          href="/veranstaltungen"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors group"
+        >
+          Alle Termine
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
       </div>
     </div>
   </section>

@@ -27,7 +27,7 @@ src/
     verband.astro            — about the association
     aktuelles.astro          — news/blog listing
     vereine.astro            — clubs directory
-    veranstaltungen.astro    — events (Google Calendar embed)
+    veranstaltungen.astro    — events (dynamic, Webling REST via /api/events)
     vorstand.astro           — board members
     kontakt.astro            — contact page with form
     mitglied-werden.astro    — membership info
@@ -72,6 +72,8 @@ Bilder: WebP, max 1200px, in `src/assets/images/blog/`. Wird automatisch als OG-
 **Vorstand** — `board` und `honorary` arrays in `src/pages/vorstand.astro`. Fotos quadratisch 400×400 WebP in `public/images/board/`.
 
 **Kantonalkader-Termine** — Stützpunkttrainings werden aus einem als CSV veröffentlichten Google Sheet (`PUBLIC_KADER_SHEET_CSV`) zur Build-Zeit in `src/pages/kantonalkader.astro` gelesen. Pflege erfolgt im Sheet; ein nächtlicher Rebuild (`.github/workflows/nightly-rebuild.yml`) übernimmt Änderungen. Details: `docs/kantonalkader-termine.md`.
+
+**Veranstaltungen** — Events werden **dynamisch** aus der Webling-REST-API geladen (Netlify Function `netlify/functions/events.mjs`, Route `/api/events`), gerendert von `src/components/EventList.astro`. Kein Rebuild nötig; Pflege ausschliesslich im Webling-Kalender (`ajvag.webling.ch`, Kalender AJV/Kantonalkader/SMM → Filter-Tags auf der Seite). Secret `WEBLING_API_KEY` nur in Netlify (nie im Repo). Details: `docs/webling-events.md`.
 
 **Navigation** — `navItems` in `src/components/Header.astro`.
 

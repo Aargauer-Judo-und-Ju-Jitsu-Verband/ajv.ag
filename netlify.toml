@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# The events function declares its own route (/api/events) via `export const config`.
+# WEBLING_API_KEY must be set as an environment variable in the Netlify UI
+# (Site settings → Environment variables) — it is never committed to the repo.
