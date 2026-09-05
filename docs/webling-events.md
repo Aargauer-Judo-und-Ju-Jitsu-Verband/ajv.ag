@@ -78,8 +78,15 @@ herunterladen: ein Abo aktualisiert sich laufend von selbst.
 - **Nur auf der Veranstaltungsseite**, nicht auf der Startseite: dort trug es zu
   dick auf. Und **über** der Liste statt darunter, weil nicht alle scrollen.
 - Es sitzt **in der Filterzeile, links neben dem Vergangene-Termine-Schalter**,
-  und spart so eine eigene Bedienzeile. Das Panel klappt als Dropdown über der
-  Liste auf (absolut positioniert gegen die Filterzeile, daher deren `relative`).
+  und spart so eine eigene Bedienzeile.
+- Das Panel **klappt darunter auf und schiebt die Liste nach unten**, statt als
+  Overlay darüber zu schweben: was an einem Knopf hängt und schwebt, soll sich
+  per Escape und Klick daneben schliessen lassen — beides kann ein `<details>`
+  nicht ohne JavaScript. Ein Aufklapper weckt die Erwartung gar nicht erst.
+- Damit die Pille trotzdem in der Zeile bleiben kann, liegt das Panel **neben**
+  dem `<details>` statt darin (sonst wäre es nur so breit wie die Pille). Eine
+  `:has()`-Regel im `<style>`-Block hält beide in Sync — ohne JavaScript, mit
+  `@supports`-Rückfall für Browser ohne `:has()`.
 - Die Filterzeile ist deshalb **nie ausgeblendet**: ihre beiden clientseitig
   gefüllten Kinder starten leer, damit die serverseitige Abo-Pille schon während
   des Ladens und bei einem Ausfall von `/api/events` erreichbar bleibt.
