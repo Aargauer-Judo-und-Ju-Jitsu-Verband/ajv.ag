@@ -1,6 +1,7 @@
 // Shared types + formatting helpers for AJV events (from /api/events).
 // Imported by the client scripts of EventList.astro and the detail page so the
-// two never drift apart. Browser-only (addToGCalUrl uses the DOM).
+// two never drift apart, and (for the static ICS config below) by EventList's
+// Astro frontmatter. Only addToGCalUrl needs the DOM.
 
 export interface Signup {
   max: number | null;
@@ -34,6 +35,42 @@ export function calendarGroup(calendar: string): string {
   if (calendar === 'AJV') return 'AJV';
   if (calendar === 'Kantonalkader') return 'Kantonalkader';
   return 'SMM';
+}
+
+// Public iCal feeds, one per Webling calendar (Webling -> Kalender -> "Kalender
+// abonnieren"). Webling makes these links deliberately unprotected: anyone
+// holding one can subscribe. That is fine here, the same events are already
+// public on the website -- but it means a calendar must never be listed unless
+// its events may be seen by everyone.
+//
+// We link Webling's own feeds rather than generating ICS ourselves: fewer parts
+// that can break (a silently stale subscription is worse than a broken page),
+// no Netlify Function load from calendar apps polling every 1-3h per subscriber,
+// and Webling handles recurrence/timezones natively.
+//
+// Keys are the calendar names exactly as /api/events reports them, so the links
+// line up with the filter chips.
+export const CALENDAR_ICS: Record<string, string> = {
+  'AJV': 'https://ajvag.webling.ch/calendar/ics/GKkz3PANN94N7zoV.ics',
+  'Kantonalkader': 'https://ajvag.webling.ch/calendar/ics/uw381eZVMDOJfn72.ics',
+  'SMM NLA': 'https://ajvag.webling.ch/calendar/ics/d69KcS9vLHdxojZn.ics',
+  'SMM NLB': 'https://ajvag.webling.ch/calendar/ics/UCgjNPUOt9p9KUrq.ics',
+  'SMM 1. Liga': 'https://ajvag.webling.ch/calendar/ics/QP61IvXZc1hwHKEe.ics',
+  'SMM Damen': 'https://ajvag.webling.ch/calendar/ics/6w318PbmxA3XAoFZ.ics',
+};
+
+// webcal:// makes Apple Kalender / Outlook *subscribe* and keep syncing, instead
+// of downloading a one-off snapshot the way a plain https .ics link does.
+export function icsWebcalUrl(calendar: string): string {
+  const url = CALENDAR_ICS[calendar];
+  return url ? url.replace(/^https?:/, 'webcal:') : '';
+}
+
+// Google Calendar registers no webcal:// handler; it takes feeds through its own
+// add-by-URL route instead.
+export function icsGoogleUrl(calendar: string): string {
+  const url = CALENDAR_ICS[calendar];
+  return url ? `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(url)}` : '';
 }
 
 export const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];

@@ -1,9 +1,18 @@
 ---
+import { CALENDAR_ICS, icsWebcalUrl, icsGoogleUrl } from '../lib/eventFormat';
+
 // Renders AJV events from the /api/events Netlify Function (Webling REST).
 // - compact: condensed rows (homepage), no filter chips
 // - full:    cards with calendar tag filter chips + past toggle
 // - calendars: optional allowlist — only show events from these calendars
 //   (used on the homepage to split "AJV" from "Kantonalkader & SMM")
+//
+// "Kalender abonnieren" (full view only) sits in the controls row, left of the
+// past toggle, and expands a panel below the row (pushing the list down rather
+// than floating over it — an overlay would promise Escape/click-outside
+// dismissal that a <details> cannot deliver without JavaScript). It is rendered
+// server-side from the static CALENDAR_ICS map and the row is never hidden, so
+// it stays reachable while events load and when /api/events fails.
 //
 // The component supports MULTIPLE instances per page: the hoisted <script> runs
 // once, then initialises every .event-list root it finds, scoped to that root.
@@ -15,6 +24,14 @@ interface Props {
 }
 
 const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.props;
+
+// Calendars this instance may show — same allow-/blocklist the event filtering
+// uses, applied to the calendars we have a feed for. Map order = chip order.
+const subscribable = Object.keys(CALENDAR_ICS).filter(
+  (c) =>
+    (!calendars.length || calendars.includes(c)) &&
+    (!exclude.length || !exclude.includes(c))
+);
 ---
 
 <div
@@ -40,11 +57,76 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     <p class="text-sm text-stone-500">Kalender konnte nicht geladen werden.</p>
   </div>
 
-  <!-- Filters + past toggle (full mode only) -->
-  <div data-el="controls" class="hidden mb-6 flex flex-wrap items-center justify-between gap-3">
-    <div data-el="filters" class="flex flex-wrap items-center gap-2"></div>
-    <div data-el="pasttoggle"></div>
-  </div>
+  <!-- Filters + subscribe + past toggle (full mode only).
+       The row itself is always visible: its two client-rendered children start
+       empty, so the server-rendered subscribe pill is still reachable while the
+       events are loading and when /api/events fails outright. -->
+  {!compact && (
+    <div data-el="controls" class="mb-6 flex flex-wrap items-center gap-3">
+      <div data-el="filters" class="flex flex-wrap items-center gap-2"></div>
+      <div class="ml-auto flex flex-wrap items-center gap-3">
+        {subscribable.length > 0 && (
+          <details class="group" data-el="subscribe">
+            <summary class="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-100 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span class="hidden sm:inline">Kalender abonnieren</span>
+              <span class="sm:hidden">Abonnieren</span>
+              <!-- flex on <summary> drops the native marker, so bring our own. -->
+              <svg class="w-3 h-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+          </details>
+        )}
+        <div data-el="pasttoggle"></div>
+      </div>
+    </div>
+  )}
+
+  <!-- Subscribe panel: a sibling of the row, not a child of <details>, so it can
+       span the full width while the pill stays put next to the past toggle. The
+       :has() rule below ties it to the disclosure — no JavaScript, and it pushes
+       the list down instead of floating over it (nothing to dismiss). -->
+  {!compact && subscribable.length > 0 && (
+    <div class="subscribe-panel mb-6 space-y-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+      <p class="text-sm text-stone-500 leading-relaxed">
+        Ein abonnierter Kalender aktualisiert sich von selbst — neue und geänderte
+        Termine erscheinen automatisch in deinem Kalender.
+      </p>
+      <div>
+        <p class="mb-2 text-xs font-semibold text-stone-400">Apple Kalender, Outlook</p>
+        <div class="flex flex-wrap gap-2">
+          {subscribable.map((cal) => (
+            <a
+              href={icsWebcalUrl(cal)}
+              title={`${cal}-Kalender abonnieren (iCal)`}
+              class="px-3 py-1.5 rounded-full text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 transition-colors"
+            >
+              {cal}
+            </a>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p class="mb-2 text-xs font-semibold text-stone-400">Google Kalender</p>
+        <div class="flex flex-wrap gap-2">
+          {subscribable.map((cal) => (
+            <a
+              href={icsGoogleUrl(cal)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`${cal}-Kalender im Google Kalender hinzufügen`}
+              class="px-3 py-1.5 rounded-full text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 transition-colors"
+            >
+              {cal}
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
 
   <!-- Events -->
   <div data-el="items" class="hidden"></div>
@@ -53,6 +135,7 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
   <div data-el="empty" class="hidden py-8 text-center">
     <p class="text-sm text-stone-500">Keine kommenden Veranstaltungen.</p>
   </div>
+
 </div>
 
 <script>
@@ -116,7 +199,6 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     const q = (name: string) => root.querySelector<HTMLElement>(`[data-el="${name}"]`)!;
     const loadingEl = q('loading');
     const errorEl = q('error');
-    const controlsEl = q('controls');
     const filtersEl = q('filters');
     const pastToggleEl = q('pasttoggle');
     const itemsEl = q('items');
@@ -306,7 +388,6 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
       if (isCompact) return;
       renderFilters();
       renderPastToggle();
-      controlsEl.classList.remove('hidden');
     }
 
     function renderFilters() {
@@ -344,7 +425,11 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
     }
 
     function renderPastToggle() {
-      const label = pastLoading ? 'Vergangene Termine werden geladen…' : 'Vergangene Termine anzeigen';
+      // Shorter wording below sm, so the toggle and the subscribe pill next to it
+      // still share one line on a 390px screen (they need ~32px less than that).
+      const label = pastLoading
+        ? `<span class="sm:hidden">Wird geladen…</span><span class="hidden sm:inline">Vergangene Termine werden geladen…</span>`
+        : `<span class="sm:hidden">Vergangene Termine</span><span class="hidden sm:inline">Vergangene Termine anzeigen</span>`;
       pastToggleEl.innerHTML = `
         <button type="button" role="switch" aria-checked="${showPast}"
           class="inline-flex items-center gap-2 text-xs font-semibold text-stone-500 hover:text-stone-700 transition-colors">
@@ -466,6 +551,22 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
 </script>
 
 <style>
+  /* The subscribe panel lives outside its <details> (so it can span the full
+     width); :has() keeps the two in sync without JavaScript. */
+  .subscribe-panel {
+    display: none;
+  }
+  .event-list:has([data-el='subscribe'][open]) .subscribe-panel {
+    display: block;
+  }
+  /* Without :has() the panel could never appear — show it instead of hiding it
+     forever (pre-2023 browsers; the disclosure then just has no effect). */
+  @supports not selector(:has(*)) {
+    .subscribe-panel {
+      display: block;
+    }
+  }
+
   /* Ensure links inside event descriptions are visibly clickable. */
   .prose-links :global(a) {
     color: var(--color-brand-600);

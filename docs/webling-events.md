@@ -68,6 +68,52 @@ Filter-Tags erscheinen: **AJV**, **Kantonalkader**, **SMM**.
 - **Absage**: Event in Webling auf Status *abgesagt* setzen → erscheint mit Badge „Abgesagt".
 - **Anmeldung**: Teilnehmer-Anmeldung im Event aktivieren → „X/Y Plätze" wird angezeigt.
 
+## Kalender abonnieren (iCal)
+
+Auf **`/veranstaltungen`** steht über der Terminliste ein aufklappbarer Block
+„Kalender abonnieren" mit einem Link pro Kalender. Damit abonnieren Besucher den
+Kalender in Apple Kalender, Outlook oder Google Kalender — abonnieren, nicht
+herunterladen: ein Abo aktualisiert sich laufend von selbst.
+
+- **Nur auf der Veranstaltungsseite**, nicht auf der Startseite: dort trug es zu
+  dick auf. Und **über** der Liste statt darunter, weil nicht alle scrollen.
+- Es sitzt **in der Filterzeile, links neben dem Vergangene-Termine-Schalter**,
+  und spart so eine eigene Bedienzeile.
+- Das Panel **klappt darunter auf und schiebt die Liste nach unten**, statt als
+  Overlay darüber zu schweben: was an einem Knopf hängt und schwebt, soll sich
+  per Escape und Klick daneben schliessen lassen — beides kann ein `<details>`
+  nicht ohne JavaScript. Ein Aufklapper weckt die Erwartung gar nicht erst.
+- Damit die Pille trotzdem in der Zeile bleiben kann, liegt das Panel **neben**
+  dem `<details>` statt darin (sonst wäre es nur so breit wie die Pille). Eine
+  `:has()`-Regel im `<style>`-Block hält beide in Sync — ohne JavaScript, mit
+  `@supports`-Rückfall für Browser ohne `:has()`.
+- Die Filterzeile ist deshalb **nie ausgeblendet**: ihre beiden clientseitig
+  gefüllten Kinder starten leer, damit die serverseitige Abo-Pille schon während
+  des Ladens und bei einem Ausfall von `/api/events` erreichbar bleibt.
+- **Zugeklappt eine kompakte Pille** in der Formensprache der Filter-Chips. Als
+  Balken über die ganze Breite sah es aus wie ein Eingabefeld und zog mehr
+  Aufmerksamkeit als die Filter darüber. Unter `sm` verkürzt sich die Beschriftung
+  auf „Abonnieren", damit Pille und Schalter auf eine Zeile passen.
+- Kein Modal: die Seite hat nirgends ein Dialog-Pattern, und ein `<details>`
+  braucht weder Fokus-Falle noch Scroll-Sperre noch JavaScript. (Das `flex` auf
+  dem `<summary>` entfernt das native Dreieck — daher der eigene Chevron.)
+- Die Links sind **Weblings eigene iCal-Feeds**, nicht selbst erzeugtes ICS.
+  Damit hängt ein Abo nur an Webling statt zusätzlich an Netlify Function,
+  API-Key und eigenem ICS-Code. Ausserdem pollen Kalender-Apps abonnierte Feeds
+  alle 1–3 h pro Abonnent — das wären sonst dauerhafte Function-Aufrufe.
+- Sie stehen in `CALENDAR_ICS` in `src/lib/eventFormat.ts`, **ein Eintrag pro
+  Webling-Kalender**. Der Schlüssel ist der Kalendername genau so, wie ihn
+  `/api/events` liefert — dadurch decken sich die Abo-Links mit den Filter-Chips.
+- Der Block wird **serverseitig** gerendert (nicht im Client-Script). Er ist also
+  auch dann da, wenn `/api/events` ausfällt oder JavaScript nicht läuft.
+- `webcal://` für Apple/Outlook; Google Kalender kennt kein `webcal://` und
+  bekommt deshalb eine eigene Zeile mit Add-by-URL-Links.
+
+**Neuen Kalender ergänzen:** in Webling *Kalender* → **Kalender abonnieren** den
+Link kopieren und in `CALENDAR_ICS` eintragen. Achtung: diese Links sind laut
+Webling bewusst ungeschützt — wer den Link hat, kann abonnieren. Nur Kalender
+eintragen, deren Termine öffentlich sein dürfen.
+
 ## Bilder pro Event
 
 Da Webling-Events kein Bildfeld haben, werden Bilder auf der Website-Seite zugeordnet
