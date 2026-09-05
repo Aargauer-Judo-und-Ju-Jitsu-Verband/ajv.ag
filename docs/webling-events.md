@@ -77,9 +77,16 @@ herunterladen: ein Abo aktualisiert sich laufend von selbst.
 
 - **Nur auf der Veranstaltungsseite**, nicht auf der Startseite: dort trug es zu
   dick auf. Und **über** der Liste statt darunter, weil nicht alle scrollen.
+- Es sitzt **in der Filterzeile, links neben dem Vergangene-Termine-Schalter**,
+  und spart so eine eigene Bedienzeile. Das Panel klappt als Dropdown über der
+  Liste auf (absolut positioniert gegen die Filterzeile, daher deren `relative`).
+- Die Filterzeile ist deshalb **nie ausgeblendet**: ihre beiden clientseitig
+  gefüllten Kinder starten leer, damit die serverseitige Abo-Pille schon während
+  des Ladens und bei einem Ausfall von `/api/events` erreichbar bleibt.
 - **Zugeklappt eine kompakte Pille** in der Formensprache der Filter-Chips. Als
   Balken über die ganze Breite sah es aus wie ein Eingabefeld und zog mehr
-  Aufmerksamkeit als die Filter darüber.
+  Aufmerksamkeit als die Filter darüber. Unter `sm` verkürzt sich die Beschriftung
+  auf „Abonnieren", damit Pille und Schalter auf eine Zeile passen.
 - Kein Modal: die Seite hat nirgends ein Dialog-Pattern, und ein `<details>`
   braucht weder Fokus-Falle noch Scroll-Sperre noch JavaScript. (Das `flex` auf
   dem `<summary>` entfernt das native Dreieck — daher der eigene Chevron.)
