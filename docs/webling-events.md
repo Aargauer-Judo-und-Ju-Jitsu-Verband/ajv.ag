@@ -77,7 +77,9 @@ herunterladen: ein Abo aktualisiert sich laufend von selbst.
 
 - **Nur auf der Veranstaltungsseite**, nicht auf der Startseite: dort trug es zu
   dick auf. Und **über** der Liste statt darunter, weil nicht alle scrollen.
-- **Zugeklappt** als eine Zeile, damit es die Filter nicht erschlägt.
+- **Zugeklappt eine kompakte Pille** in der Formensprache der Filter-Chips. Als
+  Balken über die ganze Breite sah es aus wie ein Eingabefeld und zog mehr
+  Aufmerksamkeit als die Filter darüber.
 - Kein Modal: die Seite hat nirgends ein Dialog-Pattern, und ein `<details>`
   braucht weder Fokus-Falle noch Scroll-Sperre noch JavaScript. (Das `flex` auf
   dem `<summary>` entfernt das native Dreieck — daher der eigene Chevron.)
