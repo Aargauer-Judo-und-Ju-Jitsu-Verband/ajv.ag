@@ -425,7 +425,11 @@ const subscribable = Object.keys(CALENDAR_ICS).filter(
     }
 
     function renderPastToggle() {
-      const label = pastLoading ? 'Vergangene Termine werden geladen…' : 'Vergangene Termine anzeigen';
+      // Shorter wording below sm, so the toggle and the subscribe pill next to it
+      // still share one line on a 390px screen (they need ~32px less than that).
+      const label = pastLoading
+        ? `<span class="sm:hidden">Wird geladen…</span><span class="hidden sm:inline">Vergangene Termine werden geladen…</span>`
+        : `<span class="sm:hidden">Vergangene Termine</span><span class="hidden sm:inline">Vergangene Termine anzeigen</span>`;
       pastToggleEl.innerHTML = `
         <button type="button" role="switch" aria-checked="${showPast}"
           class="inline-flex items-center gap-2 text-xs font-semibold text-stone-500 hover:text-stone-700 transition-colors">
