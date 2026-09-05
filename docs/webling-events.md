@@ -70,10 +70,17 @@ Filter-Tags erscheinen: **AJV**, **Kantonalkader**, **SMM**.
 
 ## Kalender abonnieren (iCal)
 
-Unter jeder Event-Liste steht eine Abo-Leiste: pro Kalender ein Link, mit dem
-Besucher den Kalender in Apple Kalender, Outlook oder Google Kalender
-**abonnieren** (nicht herunterladen — ein Abo aktualisiert sich laufend).
+Auf **`/veranstaltungen`** steht über der Terminliste ein aufklappbarer Block
+„Kalender abonnieren" mit einem Link pro Kalender. Damit abonnieren Besucher den
+Kalender in Apple Kalender, Outlook oder Google Kalender — abonnieren, nicht
+herunterladen: ein Abo aktualisiert sich laufend von selbst.
 
+- **Nur auf der Veranstaltungsseite**, nicht auf der Startseite: dort trug es zu
+  dick auf. Und **über** der Liste statt darunter, weil nicht alle scrollen.
+- **Zugeklappt** als eine Zeile, damit es die Filter nicht erschlägt.
+- Kein Modal: die Seite hat nirgends ein Dialog-Pattern, und ein `<details>`
+  braucht weder Fokus-Falle noch Scroll-Sperre noch JavaScript. (Das `flex` auf
+  dem `<summary>` entfernt das native Dreieck — daher der eigene Chevron.)
 - Die Links sind **Weblings eigene iCal-Feeds**, nicht selbst erzeugtes ICS.
   Damit hängt ein Abo nur an Webling statt zusätzlich an Netlify Function,
   API-Key und eigenem ICS-Code. Ausserdem pollen Kalender-Apps abonnierte Feeds
@@ -81,14 +88,10 @@ Besucher den Kalender in Apple Kalender, Outlook oder Google Kalender
 - Sie stehen in `CALENDAR_ICS` in `src/lib/eventFormat.ts`, **ein Eintrag pro
   Webling-Kalender**. Der Schlüssel ist der Kalendername genau so, wie ihn
   `/api/events` liefert — dadurch decken sich die Abo-Links mit den Filter-Chips.
-- Die Leiste wird **serverseitig** gerendert (nicht im Client-Script). Sie ist
-  also auch dann da, wenn `/api/events` ausfällt oder JavaScript nicht läuft.
-- Welche Kalender eine Instanz zeigt, ergibt sich aus denselben Props wie die
-  Event-Filterung: `calendars={['AJV']}` → nur AJV, `exclude={['AJV']}` → die
-  übrigen. Startseite links AJV, rechts Kantonalkader + SMM-Ligen; auf
-  `/veranstaltungen` alle.
+- Der Block wird **serverseitig** gerendert (nicht im Client-Script). Er ist also
+  auch dann da, wenn `/api/events` ausfällt oder JavaScript nicht läuft.
 - `webcal://` für Apple/Outlook; Google Kalender kennt kein `webcal://` und
-  bekommt deshalb hinter „Google Kalender?" eigene Add-by-URL-Links.
+  bekommt deshalb eine eigene Zeile mit Add-by-URL-Links.
 
 **Neuen Kalender ergänzen:** in Webling *Kalender* → **Kalender abonnieren** den
 Link kopieren und in `CALENDAR_ICS` eintragen. Achtung: diese Links sind laut
