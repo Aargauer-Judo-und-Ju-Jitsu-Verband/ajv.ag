@@ -68,6 +68,33 @@ Filter-Tags erscheinen: **AJV**, **Kantonalkader**, **SMM**.
 - **Absage**: Event in Webling auf Status *abgesagt* setzen → erscheint mit Badge „Abgesagt".
 - **Anmeldung**: Teilnehmer-Anmeldung im Event aktivieren → „X/Y Plätze" wird angezeigt.
 
+## Kalender abonnieren (iCal)
+
+Unter jeder Event-Liste steht eine Abo-Leiste: pro Kalender ein Link, mit dem
+Besucher den Kalender in Apple Kalender, Outlook oder Google Kalender
+**abonnieren** (nicht herunterladen — ein Abo aktualisiert sich laufend).
+
+- Die Links sind **Weblings eigene iCal-Feeds**, nicht selbst erzeugtes ICS.
+  Damit hängt ein Abo nur an Webling statt zusätzlich an Netlify Function,
+  API-Key und eigenem ICS-Code. Ausserdem pollen Kalender-Apps abonnierte Feeds
+  alle 1–3 h pro Abonnent — das wären sonst dauerhafte Function-Aufrufe.
+- Sie stehen in `CALENDAR_ICS` in `src/lib/eventFormat.ts`, **ein Eintrag pro
+  Webling-Kalender**. Der Schlüssel ist der Kalendername genau so, wie ihn
+  `/api/events` liefert — dadurch decken sich die Abo-Links mit den Filter-Chips.
+- Die Leiste wird **serverseitig** gerendert (nicht im Client-Script). Sie ist
+  also auch dann da, wenn `/api/events` ausfällt oder JavaScript nicht läuft.
+- Welche Kalender eine Instanz zeigt, ergibt sich aus denselben Props wie die
+  Event-Filterung: `calendars={['AJV']}` → nur AJV, `exclude={['AJV']}` → die
+  übrigen. Startseite links AJV, rechts Kantonalkader + SMM-Ligen; auf
+  `/veranstaltungen` alle.
+- `webcal://` für Apple/Outlook; Google Kalender kennt kein `webcal://` und
+  bekommt deshalb hinter „Google Kalender?" eigene Add-by-URL-Links.
+
+**Neuen Kalender ergänzen:** in Webling *Kalender* → **Kalender abonnieren** den
+Link kopieren und in `CALENDAR_ICS` eintragen. Achtung: diese Links sind laut
+Webling bewusst ungeschützt — wer den Link hat, kann abonnieren. Nur Kalender
+eintragen, deren Termine öffentlich sein dürfen.
+
 ## Bilder pro Event
 
 Da Webling-Events kein Bildfeld haben, werden Bilder auf der Website-Seite zugeordnet

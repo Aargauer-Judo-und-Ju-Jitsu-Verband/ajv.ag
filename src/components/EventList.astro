@@ -1,9 +1,15 @@
 ---
+import { CALENDAR_ICS, icsWebcalUrl, icsGoogleUrl } from '../lib/eventFormat';
+
 // Renders AJV events from the /api/events Netlify Function (Webling REST).
 // - compact: condensed rows (homepage), no filter chips
 // - full:    cards with calendar tag filter chips + past toggle
 // - calendars: optional allowlist — only show events from these calendars
 //   (used on the homepage to split "AJV" from "Kantonalkader & SMM")
+//
+// The subscribe bar at the bottom is rendered server-side from the static
+// CALENDAR_ICS map (respecting the same allow-/blocklist), so people can still
+// subscribe when /api/events is down or JavaScript never runs.
 //
 // The component supports MULTIPLE instances per page: the hoisted <script> runs
 // once, then initialises every .event-list root it finds, scoped to that root.
@@ -15,6 +21,14 @@ interface Props {
 }
 
 const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.props;
+
+// Calendars this instance may show — same allow-/blocklist the event filtering
+// uses, applied to the calendars we have a feed for. Map order = chip order.
+const subscribable = Object.keys(CALENDAR_ICS).filter(
+  (c) =>
+    (!calendars.length || calendars.includes(c)) &&
+    (!exclude.length || !exclude.includes(c))
+);
 ---
 
 <div
@@ -53,6 +67,47 @@ const { maxEvents = 6, compact = false, calendars = [], exclude = [] } = Astro.p
   <div data-el="empty" class="hidden py-8 text-center">
     <p class="text-sm text-stone-500">Keine kommenden Veranstaltungen.</p>
   </div>
+
+  <!-- Subscribe (static: independent of the API call above) -->
+  {subscribable.length > 0 && (
+    <div class="mt-6 pt-6 border-t border-stone-200">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-400 uppercase tracking-wider">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Abonnieren
+        </span>
+        {subscribable.map((cal) => (
+          <a
+            href={icsWebcalUrl(cal)}
+            title={`${cal}-Kalender abonnieren (iCal — Apple Kalender, Outlook)`}
+            class="px-3 py-1.5 rounded-full text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 transition-colors"
+          >
+            {cal}
+          </a>
+        ))}
+      </div>
+      <details class="mt-2">
+        <summary class="cursor-pointer text-xs text-stone-400 hover:text-stone-600 transition-colors">
+          Google Kalender?
+        </summary>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="text-xs text-stone-400">Im Google Kalender hinzufügen:</span>
+          {subscribable.map((cal) => (
+            <a
+              href={icsGoogleUrl(cal)}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-3 py-1.5 rounded-full text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 transition-colors"
+            >
+              {cal}
+            </a>
+          ))}
+        </div>
+      </details>
+    </div>
+  )}
 </div>
 
 <script>
