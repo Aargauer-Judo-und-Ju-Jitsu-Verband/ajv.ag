@@ -1,7 +1,7 @@
 ---
 title: "Technischer Kurs mit Hiroshi Katanishi in Baden-Wettingen"
 date: 2026-09-27
-description: "Technischer Judokurs des AJV mit Hiroshi Katanishi (8. Dan) in Baden-Wettingen: Bewegen wie ein Judoka – von Tsugi-ashi über Rhythmikübungen bis zum Kuzushi."
+description: "Technischer Judokurs des AJV mit Hiroshi Katanishi (8. Dan) in Baden-Wettingen: Bewegen wie ein Judoka – von Tsugi-ashi über Rhythmik bis zum Kuzushi."
 category: "Kurse"
 image: "../../assets/images/blog/technischer-kurs-katanishi-baden-2026.webp"
 imageAlt: "Gruppenfoto der Teilnehmenden mit Hiroshi Katanishi auf der Matte im Dojo des Judo Club Baden-Wettingen"
