@@ -67,13 +67,15 @@ imageAlt: "Beschreibung des Bildes"
 ```
 Bilder: WebP, max 1200px, in `src/assets/images/blog/`. Wird automatisch als OG-Bild verwendet.
 
-**Vereine** — `clubs` array in `src/pages/vereine.astro` UND Logo-Listen in `src/pages/index.astro`. Die Vereinskarte (`src/components/ClubMap.astro`, Leaflet + OpenStreetMap, selbst gehostet) nutzt `lat`/`lng` aus demselben Array; Kantonsgrenze in `src/data/aargau.json`.
+**Vereine** — `clubs` array in `src/data/clubs.ts` (von `src/pages/vereine.astro` importiert) UND Logo-Listen in `src/pages/index.astro`. Optionale Felder `news`, `instagram`, `facebook` erscheinen als Links auf der Vereinskarte. Die Vereinskarte (`src/components/ClubMap.astro`, Leaflet + OpenStreetMap, selbst gehostet) nutzt `lat`/`lng` aus demselben Array; Kantonsgrenze in `src/data/aargau.json`.
 
 **Vorstand** — `board` und `honorary` arrays in `src/pages/vorstand.astro`. Fotos quadratisch 400×400 WebP in `public/images/board/`.
 
 **Kantonalkader-Termine** — Stützpunkttrainings werden aus einem als CSV veröffentlichten Google Sheet (`PUBLIC_KADER_SHEET_CSV`) zur Build-Zeit in `src/pages/kantonalkader.astro` gelesen. Pflege erfolgt im Sheet; ein nächtlicher Rebuild (`.github/workflows/nightly-rebuild.yml`) übernimmt Änderungen. Details: `docs/kantonalkader-termine.md`.
 
 **Veranstaltungen** — Events werden **dynamisch** aus der Webling-REST-API geladen (Netlify Function `netlify/functions/events.mjs`, Route `/api/events`), gerendert von `src/components/EventList.astro`. Kein Rebuild nötig; Pflege ausschliesslich im Webling-Kalender (`ajvag.webling.ch`, Kalender AJV/Kantonalkader/SMM → Filter-Tags auf der Seite). Secret `WEBLING_API_KEY` nur in Netlify (nie im Repo). Details: `docs/webling-events.md`.
+
+**Neues aus den Vereinen** — `src/components/ClubNews.astro` (auf Aktuelles und Startseite) zeigt die neuesten Beiträge der Mitgliedvereine. Quelle 1: RSS-Feeds (`feed` in `src/data/clubs.ts`), zur Build-Zeit geladen in `src/lib/clubNews.ts`; der nächtliche Rebuild hält die Liste aktuell. Quelle 2: Handeinträge in `src/data/club-news.ts` (`manualClubNews`) für Vereine ohne Feed. Unpassende Feed-Beiträge per URL in `hiddenClubNews` ausblenden. Beiträge älter als 120 Tage fallen weg, max. 3 pro Verein. Ein nicht erreichbarer Feed wird übersprungen, der Build läuft weiter.
 
 **Navigation** — `navItems` in `src/components/Header.astro`.
 

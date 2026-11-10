@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
+import ClubNews from '../components/ClubNews.astro';
 
 const posts = (await getCollection('blog')).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
@@ -70,4 +71,7 @@ const posts = (await getCollection('blog')).sort(
       </div>
     </div>
   </section>
+
+  <!-- Neues aus den Vereinen (RSS-Feeds der Mitgliedvereine, zur Build-Zeit geladen) -->
+  <ClubNews tone="white" />
 </BaseLayout>

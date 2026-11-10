@@ -4,6 +4,7 @@ import OrganizationSchema from '../components/seo/OrganizationSchema.astro';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import EventList from '../components/EventList.astro';
+import ClubNews from '../components/ClubNews.astro';
 
 const posts = (await getCollection('blog'))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
@@ -176,6 +177,9 @@ const posts = (await getCollection('blog'))
       </a>
     </div>
   </section>
+
+  <!-- Neues aus den Vereinen -->
+  <ClubNews limit={3} hideWhenEmpty tone="white" flushTop />
 
   <!-- Kantonalkader / AJV Angebote -->
   <section class="py-20 lg:py-28">
