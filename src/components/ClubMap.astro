@@ -1,0 +1,136 @@
+---
+/**
+ * Selbst gehostete Vereinskarte (Leaflet + OpenStreetMap), ersetzt die frühere Atlist-Einbettung.
+ * Erwartet die Vereine mit `lat`/`lng`; Vereine ohne Koordinaten werden ausgelassen.
+ */
+interface Club {
+  name: string;
+  address?: string;
+  location: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  logo?: string;
+  lat?: number;
+  lng?: number;
+}
+
+interface Props {
+  clubs: Club[];
+  height?: number;
+}
+
+const { clubs, height = 600 } = Astro.props;
+const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng === 'number');
+---
+
+<div
+  class="club-map isolate w-full bg-stone-100"
+  style={`height:${height}px`}
+  data-clubs={JSON.stringify(mapClubs)}
+  role="region"
+  aria-label="Karte der AJV-Vereine im Kanton Aargau"
+></div>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+  import aargau from '../data/aargau.json';
+
+  type Club = {
+    name: string; address?: string; location: string; phone?: string;
+    email?: string; website?: string; logo?: string; lat: number; lng: number;
+  };
+
+  const esc = (s: string) =>
+    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+  function popupHtml(c: Club) {
+    let h = '<div class="club-popup">';
+    h += '<div class="club-popup-head">';
+    if (c.logo) h += `<img src="${esc(c.logo)}" alt="" width="40" height="40">`;
+    h += `<h3>${esc(c.name)}</h3></div>`;
+    h += `<p>${c.address ? esc(c.address) + '<br>' : ''}${esc(c.location)}</p>`;
+    if (c.phone) h += `<p><a href="tel:${esc(c.phone.replace(/\s/g, ''))}">${esc(c.phone)}</a></p>`;
+    if (c.email) h += `<p><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></p>`;
+    if (c.website) h += `<a class="club-popup-btn" href="${esc(c.website)}" target="_blank" rel="noopener noreferrer">Zur Website</a>`;
+    return h + '</div>';
+  }
+
+  const pin = L.divIcon({
+    className: 'club-pin',
+    html: '<span></span>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
+  });
+
+  document.querySelectorAll<HTMLElement>('.club-map').forEach((el) => {
+    const clubs: Club[] = JSON.parse(el.dataset.clubs || '[]');
+    const map = L.map(el, { scrollWheelZoom: false, minZoom: 8 });
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    // Kantonsgrenze; Fläche ausserhalb des Aargaus leicht abgeblendet
+    const ring = (aargau.features[0].geometry.coordinates[0] as number[][]).map(
+      ([lng, lat]) => [lat, lng] as [number, number],
+    );
+    const world: [number, number][] = [[90, -180], [90, 180], [-90, 180], [-90, -180]];
+    L.polygon([world, ring], { stroke: false, fillColor: '#FAFAF8', fillOpacity: 0.6, interactive: false }).addTo(map);
+    const outline = L.polygon(ring, { color: '#2A57C5', weight: 2, fill: false, interactive: false }).addTo(map);
+
+    map.fitBounds(outline.getBounds(), { padding: [12, 12] });
+    map.setMaxBounds(outline.getBounds().pad(0.6));
+
+    for (const c of clubs) {
+      L.marker([c.lat, c.lng], { icon: pin, title: c.name, alt: c.name })
+        .bindPopup(popupHtml(c), { minWidth: 220, maxWidth: 280 })
+        .addTo(map);
+    }
+
+    // Mausrad-Zoom erst nach Klick in die Karte, damit das Seiten-Scrollen nicht hängen bleibt
+    map.on('click', () => map.scrollWheelZoom.enable());
+    el.addEventListener('mouseleave', () => map.scrollWheelZoom.disable());
+  });
+</script>
+
+<style is:global>
+  .club-pin span {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50% 50% 50% 0;
+    background: var(--color-brand-500);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+    transform: rotate(-45deg);
+  }
+  .club-pin span::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .club-popup { font-family: inherit; color: var(--color-stone-600); }
+  .club-popup-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .club-popup-head img { width: 40px; height: 40px; object-fit: contain; }
+  .club-popup h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--color-stone-900); }
+  .club-popup p { margin: 2px 0 !important; font-size: 13px; }
+  .club-popup a { color: var(--color-brand-600); }
+  .club-popup a.club-popup-btn {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--color-brand-500);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .club-popup a.club-popup-btn:hover { background: var(--color-brand-600); }
+</style>

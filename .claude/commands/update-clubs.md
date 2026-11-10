@@ -25,6 +25,7 @@ If unclear, ask the user.
 - **Phone** (optional, im Format `+41 79 ...` oder `062 ...`)
 - **Email** (optional)
 - **Logo** (Pflicht — sonst fehlt der Verein in der Homepage-Grid)
+- **Koordinaten** `lat`/`lng` (Pflicht für die Karte — ohne fehlt der Marker). Adresse auf map.geo.admin.ch oder Google Maps suchen, Rechtsklick → Koordinaten (WGS84, z. B. `47.3948, 8.0598`)
 
 ### 3. Optimize the logo (for new clubs)
 ```bash
@@ -43,8 +44,10 @@ magick <source-logo>.png -resize 400x -quality 85 -define webp:lossless=false pu
 Find the `clubs` array. Add/edit/remove the entry:
 
 ```ts
-{ name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp' },
+{ name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp', lat: 47.2724, lng: 8.3403 },
 ```
+
+Die Karte auf der Vereinsseite (`src/components/ClubMap.astro`, Leaflet + OpenStreetMap) liest dasselbe Array — Marker und Popups aktualisieren sich automatisch. Bei Adresswechsel `lat`/`lng` mit anpassen.
 
 Behalte die Reihenfolge alphabetisch (oder konsistent mit dem bestehenden Stand).
 

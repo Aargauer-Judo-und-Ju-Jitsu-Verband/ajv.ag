@@ -1,21 +1,24 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ClubMap from '../components/ClubMap.astro';
+
+// lat/lng: Standort des Markers auf der Karte (Rechtsklick in Google Maps / map.geo.admin.ch → Koordinaten kopieren)
 
 const clubs = [
-  { name: 'JJC Aarau', address: 'Delfstrasse 44', location: '5000 Aarau', phone: '062 824 33 66', website: 'http://www.jjjcaarau.ch/', logo: '/images/clubs/aarau.webp' },
-  { name: 'JC Baden-Wettingen', location: 'Baden-Wettingen', email: 'info@jcbw.ch', website: 'http://www.jcbw.ch/', logo: '/images/clubs/baden-wettingen.webp' },
-  { name: 'JJJC Brugg', location: 'Brugg', website: 'http://www.jjjcbrugg.ch/', logo: '/images/clubs/brugg.webp' },
-  { name: 'JC Bad Zurzach', location: 'Bad Zurzach', phone: '+41 79 578 35 87', email: 'info@jcbz.ch', website: 'http://www.jcbz.ch/', logo: '/images/clubs/bad-zurzach.webp' },
-  { name: 'Bushido Frick', address: 'Gänsacker 12B', location: '5070 Frick', phone: '+41 76 202 92 66', email: 'dlandis86@gmail.com', website: 'https://bushido-frick.ch/', logo: '/images/clubs/bushido-frick.webp' },
-  { name: 'Judo Club Arashi Kulm', location: '5722 Gränichen', phone: '+41 79 793 74 28', website: 'http://www.judo-kulm.ch/', logo: '/images/clubs/arashi-kulm.webp' },
-  { name: 'Aikido- und Judoschule Lenzburg', location: '5600 Lenzburg', phone: '062 892 39 70', website: 'http://www.okami.ch/', logo: '/images/clubs/lenzburg.webp' },
-  { name: 'Judo Club Magden', location: '4312 Magden', website: 'https://judoclubmagden.ch/', logo: '/images/clubs/magden.webp' },
-  { name: 'JJJC Möhlin', location: '4313 Möhlin', phone: '061 421 44 45', email: 'info@jjjcmoehlin.ch', website: 'https://www.jjjcmoehlin.ch/', logo: '/images/clubs/moehlin.webp' },
-  { name: 'Movimento Wohlen', location: '5610 Wohlen', phone: '+41 56 621 19 44', email: 'info@movimento-wohlen.ch', website: 'https://www.movimento-wohlen.ch/', logo: '/images/clubs/movimento-wohlen.webp' },
-  { name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp' },
-  { name: 'Judo Club Reinach AG', location: '4663 Aarburg', phone: '+41 62 791 69 82', email: 'marti.matthias@bluewin.ch', website: 'http://www.judoclub-reinach.ch/', logo: '/images/clubs/reinach.webp' },
-  { name: 'Judo und SVC Rothrist', address: 'Robert-Barth-Weg 2c', location: '4852 Rothrist', email: 'praesident@judoclubrothrist.ch', website: 'http://www.judoclubrothrist.ch/', logo: '/images/clubs/rothrist.webp' },
-  { name: 'Judo und Aikido Club Wohlen', location: '5610 Wohlen', phone: '+41 79 586 72 01', email: 'info@jacwohlen.ch', website: 'https://jacwohlen.ch/', logo: '/images/clubs/jac-wohlen.webp' },
+  { name: 'JJC Aarau', address: 'Delfstrasse 44', location: '5000 Aarau', phone: '062 824 33 66', website: 'http://www.jjjcaarau.ch/', logo: '/images/clubs/aarau.webp', lat: 47.3948, lng: 8.0598 },
+  { name: 'JC Baden-Wettingen', location: 'Baden-Wettingen', email: 'info@jcbw.ch', website: 'http://www.jcbw.ch/', logo: '/images/clubs/baden-wettingen.webp', lat: 47.469, lng: 8.315 },
+  { name: 'JJJC Brugg', location: 'Brugg', website: 'http://www.jjjcbrugg.ch/', logo: '/images/clubs/brugg.webp', lat: 47.4792, lng: 8.1999 },
+  { name: 'JC Bad Zurzach', location: 'Bad Zurzach', phone: '+41 79 578 35 87', email: 'info@jcbz.ch', website: 'http://www.jcbz.ch/', logo: '/images/clubs/bad-zurzach.webp', lat: 47.5876, lng: 8.293 },
+  { name: 'Bushido Frick', address: 'Gänsacker 12B', location: '5070 Frick', phone: '+41 76 202 92 66', email: 'dlandis86@gmail.com', website: 'https://bushido-frick.ch/', logo: '/images/clubs/bushido-frick.webp', lat: 47.5109, lng: 8.0156 },
+  { name: 'Judo Club Arashi Kulm', location: '5722 Gränichen', phone: '+41 79 793 74 28', website: 'http://www.judo-kulm.ch/', logo: '/images/clubs/arashi-kulm.webp', lat: 47.3527, lng: 8.1081 },
+  { name: 'Aikido- und Judoschule Lenzburg', location: '5600 Lenzburg', phone: '062 892 39 70', website: 'http://www.okami.ch/', logo: '/images/clubs/lenzburg.webp', lat: 47.3865, lng: 8.1822 },
+  { name: 'Judo Club Magden', location: '4312 Magden', website: 'https://judoclubmagden.ch/', logo: '/images/clubs/magden.webp', lat: 47.5216, lng: 7.811 },
+  { name: 'JJJC Möhlin', location: '4313 Möhlin', phone: '061 421 44 45', email: 'info@jjjcmoehlin.ch', website: 'https://www.jjjcmoehlin.ch/', logo: '/images/clubs/moehlin.webp', lat: 47.5646, lng: 7.8549 },
+  { name: 'Movimento Wohlen', location: '5610 Wohlen', phone: '+41 56 621 19 44', email: 'info@movimento-wohlen.ch', website: 'https://www.movimento-wohlen.ch/', logo: '/images/clubs/movimento-wohlen.webp', lat: 47.3546, lng: 8.2822 },
+  { name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp', lat: 47.2724, lng: 8.3403 },
+  { name: 'Judo Club Reinach AG', location: '4663 Aarburg', phone: '+41 62 791 69 82', email: 'marti.matthias@bluewin.ch', website: 'http://www.judoclub-reinach.ch/', logo: '/images/clubs/reinach.webp', lat: 47.2625, lng: 8.1803 },
+  { name: 'Judo und SVC Rothrist', address: 'Robert-Barth-Weg 2c', location: '4852 Rothrist', email: 'praesident@judoclubrothrist.ch', website: 'http://www.judoclubrothrist.ch/', logo: '/images/clubs/rothrist.webp', lat: 47.2999, lng: 7.8865 },
+  { name: 'Judo und Aikido Club Wohlen', location: '5610 Wohlen', phone: '+41 79 586 72 01', email: 'info@jacwohlen.ch', website: 'https://jacwohlen.ch/', logo: '/images/clubs/jac-wohlen.webp', lat: 47.3505, lng: 8.2700 },
 ];
 ---
 
@@ -42,17 +45,7 @@ const clubs = [
       <p class="text-xs font-semibold text-brand-500 uppercase tracking-[0.3em] mb-3">Standorte</p>
       <h2 class="font-display font-bold text-3xl lg:text-4xl text-stone-900 mb-8 heading-accent">Vereinsstandorte im Kanton Aargau</h2>
       <div class="bg-white border border-stone-200 rounded-lg overflow-hidden shadow-lg">
-        <iframe
-          src="https://my.atlist.com/map/bf8016d0-5d2d-4079-9e75-b2a506fb454e?share=true"
-          allow="geolocation 'self' https://my.atlist.com"
-          width="100%"
-          height="600"
-          loading="lazy"
-          frameborder="0"
-          scrolling="no"
-          allowfullscreen
-          class="w-full"
-        ></iframe>
+        <ClubMap clubs={clubs} />
       </div>
     </div>
   </section>

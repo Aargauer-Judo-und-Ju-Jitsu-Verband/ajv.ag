@@ -67,7 +67,7 @@ imageAlt: "Beschreibung des Bildes"
 ```
 Bilder: WebP, max 1200px, in `src/assets/images/blog/`. Wird automatisch als OG-Bild verwendet.
 
-**Vereine** — `clubs` array in `src/pages/vereine.astro` UND Logo-Listen in `src/pages/index.astro`.
+**Vereine** — `clubs` array in `src/pages/vereine.astro` UND Logo-Listen in `src/pages/index.astro`. Die Vereinskarte (`src/components/ClubMap.astro`, Leaflet + OpenStreetMap, selbst gehostet) nutzt `lat`/`lng` aus demselben Array; Kantonsgrenze in `src/data/aargau.json`.
 
 **Vorstand** — `board` und `honorary` arrays in `src/pages/vorstand.astro`. Fotos quadratisch 400×400 WebP in `public/images/board/`.
 
