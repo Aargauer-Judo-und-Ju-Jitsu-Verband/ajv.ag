@@ -69,7 +69,10 @@ const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng =
 
   document.querySelectorAll<HTMLElement>('.club-map').forEach((el) => {
     const clubs: Club[] = JSON.parse(el.dataset.clubs || '[]');
-    const map = L.map(el, { scrollWheelZoom: false, minZoom: 8 });
+    // Gesten wie bei Google Maps: Handy → ein Finger scrollt die Seite, zwei Finger bewegen/zoomen die Karte.
+    // Desktop → Ziehen mit der Maus, Zoomen mit Strg/⌘ + Mausrad (normales Scrollen scrollt die Seite).
+    const mobile = L.Browser.mobile;
+    const map = L.map(el, { minZoom: 8, dragging: !mobile, scrollWheelZoom: true });
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -112,9 +115,38 @@ const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng =
       }
     });
 
-    // Mausrad-Zoom erst nach Klick in die Karte, damit das Seiten-Scrollen nicht hängen bleibt
-    map.on('click', () => map.scrollWheelZoom.enable());
-    el.addEventListener('mouseleave', () => map.scrollWheelZoom.disable());
+    const hint = L.DomUtil.create('div', 'club-map-hint', el);
+    hint.textContent = mobile
+      ? 'Karte mit zwei Fingern bewegen'
+      : `Zum Zoomen ${/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Strg'} + Scrollen verwenden`;
+    let hintTimer: number | undefined;
+    const showHint = () => {
+      hint.classList.add('is-visible');
+      clearTimeout(hintTimer);
+      hintTimer = window.setTimeout(() => hint.classList.remove('is-visible'), 1500);
+    };
+    const hideHint = () => {
+      clearTimeout(hintTimer);
+      hint.classList.remove('is-visible');
+    };
+
+    // Capture-Phase: läuft vor Leaflets eigenem Wheel-Handler
+    el.addEventListener(
+      'wheel',
+      (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          hideHint();
+          return;
+        }
+        e.stopImmediatePropagation();
+        showHint();
+      },
+      { capture: true, passive: true },
+    );
+
+    if (mobile) {
+      el.addEventListener('touchmove', (e) => (e.touches.length === 1 ? showHint() : hideHint()), { passive: true });
+    }
   });
 </script>
 
@@ -136,6 +168,23 @@ const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng =
     border-radius: 50%;
     background: #fff;
   }
+  .club-map-hint {
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgb(14 32 80 / 0.45);
+    color: #fff;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .club-map-hint.is-visible { opacity: 1; transition-duration: 0.15s; }
   .club-popup { font-family: inherit; color: var(--color-stone-600); }
   .club-popup-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
   .club-popup-head img { width: 40px; height: 40px; object-fit: contain; }
