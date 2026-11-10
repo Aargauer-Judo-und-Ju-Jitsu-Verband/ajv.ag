@@ -25,7 +25,7 @@ If unclear, ask the user.
 - **Phone** (optional, im Format `+41 79 ...` oder `062 ...`)
 - **Email** (optional)
 - **Logo** (Pflicht — sonst fehlt der Verein in der Homepage-Grid)
-- **Sportarten** `disciplines` (Pflicht für den Filter): Auswahl aus `'Judo'`, `'Ju-Jitsu'`, `'Aikido'`, `'A-Judo'`. Filter-Buttons erscheinen nur für Sportarten, die mindestens ein Verein hat
+- **Sportarten** `disciplines` (Pflicht für den Filter): Auswahl aus `'Judo'`, `'Ju-Jitsu'`, `'Aikido'`, `'A-Judo'`
 - **Koordinaten** `lat`/`lng` (Pflicht für die Karte — ohne fehlt der Marker). Adresse auf map.geo.admin.ch oder Google Maps suchen, Rechtsklick → Koordinaten (WGS84, z. B. `47.3948, 8.0598`)
 
 ### 3. Optimize the logo (for new clubs)

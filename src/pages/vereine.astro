@@ -22,8 +22,8 @@ const clubs: { name: string; address?: string; location: string; phone?: string;
   { name: 'Judo und Aikido Club Wohlen', location: '5610 Wohlen', phone: '+41 79 586 72 01', email: 'info@jacwohlen.ch', website: 'https://jacwohlen.ch/', logo: '/images/clubs/jac-wohlen.webp', disciplines: ['Judo', 'Aikido'], lat: 47.3505, lng: 8.2700 },
 ];
 
-const DISCIPLINE_ORDER = ['Judo', 'Ju-Jitsu', 'Aikido', 'A-Judo'];
-const disciplines = DISCIPLINE_ORDER.filter((d) => clubs.some((c) => c.disciplines.includes(d)));
+// Filter-Buttons, immer alle angezeigt (auch wenn noch kein Verein die Sportart hat)
+const disciplines = ['Judo', 'Ju-Jitsu', 'Aikido', 'A-Judo'];
 ---
 
 <BaseLayout title="Vereine" description="14 Judo- und Ju-Jitsu-Vereine im Kanton Aargau – mit Kontaktdaten, Standorten und Websites. Finde dein Dojo in Aarau, Baden, Brugg, Lenzburg, Wohlen und vielen weiteren Aargauer Gemeinden.">
