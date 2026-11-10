@@ -1,22 +1,29 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ClubMap from '../components/ClubMap.astro';
 
-const clubs = [
-  { name: 'JJC Aarau', address: 'Delfstrasse 44', location: '5000 Aarau', phone: '062 824 33 66', website: 'http://www.jjjcaarau.ch/', logo: '/images/clubs/aarau.webp' },
-  { name: 'JC Baden-Wettingen', location: 'Baden-Wettingen', email: 'info@jcbw.ch', website: 'http://www.jcbw.ch/', logo: '/images/clubs/baden-wettingen.webp' },
-  { name: 'JJJC Brugg', location: 'Brugg', website: 'http://www.jjjcbrugg.ch/', logo: '/images/clubs/brugg.webp' },
-  { name: 'JC Bad Zurzach', location: 'Bad Zurzach', phone: '+41 79 578 35 87', email: 'info@jcbz.ch', website: 'http://www.jcbz.ch/', logo: '/images/clubs/bad-zurzach.webp' },
-  { name: 'Bushido Frick', address: 'Gänsacker 12B', location: '5070 Frick', phone: '+41 76 202 92 66', email: 'dlandis86@gmail.com', website: 'https://bushido-frick.ch/', logo: '/images/clubs/bushido-frick.webp' },
-  { name: 'Judo Club Arashi Kulm', location: '5722 Gränichen', phone: '+41 79 793 74 28', website: 'http://www.judo-kulm.ch/', logo: '/images/clubs/arashi-kulm.webp' },
-  { name: 'Aikido- und Judoschule Lenzburg', location: '5600 Lenzburg', phone: '062 892 39 70', website: 'http://www.okami.ch/', logo: '/images/clubs/lenzburg.webp' },
-  { name: 'Judo Club Magden', location: '4312 Magden', website: 'https://judoclubmagden.ch/', logo: '/images/clubs/magden.webp' },
-  { name: 'JJJC Möhlin', location: '4313 Möhlin', phone: '061 421 44 45', email: 'info@jjjcmoehlin.ch', website: 'https://www.jjjcmoehlin.ch/', logo: '/images/clubs/moehlin.webp' },
-  { name: 'Movimento Wohlen', location: '5610 Wohlen', phone: '+41 56 621 19 44', email: 'info@movimento-wohlen.ch', website: 'https://www.movimento-wohlen.ch/', logo: '/images/clubs/movimento-wohlen.webp' },
-  { name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp' },
-  { name: 'Judo Club Reinach AG', location: '4663 Aarburg', phone: '+41 62 791 69 82', email: 'marti.matthias@bluewin.ch', website: 'http://www.judoclub-reinach.ch/', logo: '/images/clubs/reinach.webp' },
-  { name: 'Judo und SVC Rothrist', address: 'Robert-Barth-Weg 2c', location: '4852 Rothrist', email: 'praesident@judoclubrothrist.ch', website: 'http://www.judoclubrothrist.ch/', logo: '/images/clubs/rothrist.webp' },
-  { name: 'Judo und Aikido Club Wohlen', location: '5610 Wohlen', phone: '+41 79 586 72 01', email: 'info@jacwohlen.ch', website: 'https://jacwohlen.ch/', logo: '/images/clubs/jac-wohlen.webp' },
+// disciplines: Sportarten für den Filter (Judo, Ju-Jitsu, Aikido, A-Judo)
+// lat/lng: Standort des Markers auf der Karte (Rechtsklick in Google Maps / map.geo.admin.ch → Koordinaten kopieren)
+
+const clubs: { name: string; address?: string; location: string; phone?: string; email?: string; website?: string; logo: string; disciplines: string[]; lat: number; lng: number }[] = [
+  { name: 'JJC Aarau', address: 'Delfstrasse 44', location: '5000 Aarau', phone: '062 824 33 66', website: 'http://www.jjjcaarau.ch/', logo: '/images/clubs/aarau.webp', disciplines: ['Judo', 'Ju-Jitsu'], lat: 47.3948, lng: 8.0598 },
+  { name: 'JC Baden-Wettingen', location: 'Baden-Wettingen', email: 'info@jcbw.ch', website: 'http://www.jcbw.ch/', logo: '/images/clubs/baden-wettingen.webp', disciplines: ['Judo'], lat: 47.469, lng: 8.315 },
+  { name: 'JJJC Brugg', location: 'Brugg', website: 'http://www.jjjcbrugg.ch/', logo: '/images/clubs/brugg.webp', disciplines: ['Judo', 'Ju-Jitsu'], lat: 47.4792, lng: 8.1999 },
+  { name: 'JC Bad Zurzach', location: 'Bad Zurzach', phone: '+41 79 578 35 87', email: 'info@jcbz.ch', website: 'http://www.jcbz.ch/', logo: '/images/clubs/bad-zurzach.webp', disciplines: ['Judo'], lat: 47.5876, lng: 8.293 },
+  { name: 'Bushido Frick', address: 'Gänsacker 12B', location: '5070 Frick', phone: '+41 76 202 92 66', email: 'dlandis86@gmail.com', website: 'https://bushido-frick.ch/', logo: '/images/clubs/bushido-frick.webp', disciplines: ['Judo'], lat: 47.5109, lng: 8.0156 },
+  { name: 'Judo Club Arashi Kulm', location: '5722 Gränichen', phone: '+41 79 793 74 28', website: 'http://www.judo-kulm.ch/', logo: '/images/clubs/arashi-kulm.webp', disciplines: ['Judo'], lat: 47.3527, lng: 8.1081 },
+  { name: 'Aikido- und Judoschule Lenzburg', location: '5600 Lenzburg', phone: '062 892 39 70', website: 'http://www.okami.ch/', logo: '/images/clubs/lenzburg.webp', disciplines: ['Aikido', 'Judo'], lat: 47.3865, lng: 8.1822 },
+  { name: 'Judo Club Magden', location: '4312 Magden', website: 'https://judoclubmagden.ch/', logo: '/images/clubs/magden.webp', disciplines: ['Judo'], lat: 47.5216, lng: 7.811 },
+  { name: 'JJJC Möhlin', location: '4313 Möhlin', phone: '061 421 44 45', email: 'info@jjjcmoehlin.ch', website: 'https://www.jjjcmoehlin.ch/', logo: '/images/clubs/moehlin.webp', disciplines: ['Judo', 'Ju-Jitsu'], lat: 47.5646, lng: 7.8549 },
+  { name: 'Movimento Wohlen', location: '5610 Wohlen', phone: '+41 56 621 19 44', email: 'info@movimento-wohlen.ch', website: 'https://www.movimento-wohlen.ch/', logo: '/images/clubs/movimento-wohlen.webp', disciplines: ['Judo'], lat: 47.3546, lng: 8.2822 },
+  { name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp', disciplines: ['Judo'], lat: 47.2724, lng: 8.3403 },
+  { name: 'Judo Club Reinach AG', location: '4663 Aarburg', phone: '+41 62 791 69 82', email: 'marti.matthias@bluewin.ch', website: 'http://www.judoclub-reinach.ch/', logo: '/images/clubs/reinach.webp', disciplines: ['Judo'], lat: 47.2625, lng: 8.1803 },
+  { name: 'Judo und SVC Rothrist', address: 'Robert-Barth-Weg 2c', location: '4852 Rothrist', email: 'praesident@judoclubrothrist.ch', website: 'http://www.judoclubrothrist.ch/', logo: '/images/clubs/rothrist.webp', disciplines: ['Judo'], lat: 47.2999, lng: 7.8865 },
+  { name: 'Judo und Aikido Club Wohlen', location: '5610 Wohlen', phone: '+41 79 586 72 01', email: 'info@jacwohlen.ch', website: 'https://jacwohlen.ch/', logo: '/images/clubs/jac-wohlen.webp', disciplines: ['Judo', 'Aikido', 'A-Judo'], lat: 47.3505, lng: 8.2700 },
 ];
+
+// Filter-Buttons, immer alle angezeigt (auch wenn noch kein Verein die Sportart hat)
+const disciplines = ['Judo', 'Ju-Jitsu', 'Aikido', 'A-Judo'];
 ---
 
 <BaseLayout title="Vereine" description="14 Judo- und Ju-Jitsu-Vereine im Kanton Aargau – mit Kontaktdaten, Standorten und Websites. Finde dein Dojo in Aarau, Baden, Brugg, Lenzburg, Wohlen und vielen weiteren Aargauer Gemeinden.">
@@ -41,18 +48,27 @@ const clubs = [
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <p class="text-xs font-semibold text-brand-500 uppercase tracking-[0.3em] mb-3">Standorte</p>
       <h2 class="font-display font-bold text-3xl lg:text-4xl text-stone-900 mb-8 heading-accent">Vereinsstandorte im Kanton Aargau</h2>
+      <div id="club-filter" class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+        <label class="relative flex-1 sm:max-w-sm">
+          <span class="sr-only">Verein oder Ort suchen</span>
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+          </svg>
+          <input id="club-search" type="search" placeholder="Verein oder Ort suchen…" autocomplete="off"
+            class="w-full pl-9 pr-3 py-2.5 bg-white border border-stone-200 rounded-full text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent" />
+        </label>
+        <div class="flex flex-wrap gap-2" role="group" aria-label="Nach Sportart filtern">
+          {disciplines.map((d) => (
+            <button type="button" data-discipline={d} aria-pressed="false"
+              class="discipline-chip px-4 py-2 rounded-full border border-stone-200 bg-white text-sm font-medium text-stone-600 hover:border-brand-400 transition-colors aria-pressed:bg-brand-500 aria-pressed:border-brand-500 aria-pressed:text-white">
+              {d}
+            </button>
+          ))}
+        </div>
+        <p id="club-count" class="text-sm text-stone-500 sm:ml-auto" aria-live="polite"></p>
+      </div>
       <div class="bg-white border border-stone-200 rounded-lg overflow-hidden shadow-lg">
-        <iframe
-          src="https://my.atlist.com/map/bf8016d0-5d2d-4079-9e75-b2a506fb454e?share=true"
-          allow="geolocation 'self' https://my.atlist.com"
-          width="100%"
-          height="600"
-          loading="lazy"
-          frameborder="0"
-          scrolling="no"
-          allowfullscreen
-          class="w-full"
-        ></iframe>
+        <ClubMap clubs={clubs} />
       </div>
     </div>
   </section>
@@ -60,14 +76,22 @@ const clubs = [
   <!-- Club Cards -->
   <section class="py-20 lg:py-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p id="club-empty" class="hidden text-stone-500 mb-6">Kein Verein passt zu deiner Suche. <button type="button" id="club-reset" class="text-brand-600 underline">Filter zurücksetzen</button></p>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {clubs.map((club) => (
-          <div class="bg-white border border-stone-200 rounded-lg p-6 card-hover">
+          <div class="club-card bg-white border border-stone-200 rounded-lg p-6 card-hover" data-name={club.name}
+            data-search={[club.name, club.address, club.location, ...club.disciplines].filter(Boolean).join(' ').toLowerCase()}
+            data-disciplines={club.disciplines.join('|')}>
             <div class="flex items-center gap-4 mb-4">
               <img src={club.logo} alt={club.name} class="w-12 h-12 object-contain" />
               <h3 class="font-display font-semibold text-xl text-stone-900">{club.name}</h3>
             </div>
             <div class="w-8 h-0.5 bg-brand-400 mb-4"></div>
+            <div class="flex flex-wrap gap-1.5 mb-3">
+              {club.disciplines.map((d) => (
+                <span class="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 text-xs font-medium">{d}</span>
+              ))}
+            </div>
             <div class="space-y-2 text-sm text-stone-500">
               <p class="flex items-start gap-2">
                 <svg class="w-4 h-4 shrink-0 text-stone-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,4 +133,43 @@ const clubs = [
       </div>
     </div>
   </section>
+
+<script>
+  // Suche + Sportart-Filter: filtert die Vereinskarten und die Marker auf der Karte gemeinsam.
+  const search = document.getElementById('club-search') as HTMLInputElement;
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.discipline-chip')];
+  const cards = [...document.querySelectorAll<HTMLElement>('.club-card')];
+  const count = document.getElementById('club-count')!;
+  const empty = document.getElementById('club-empty')!;
+
+  function apply() {
+    const terms = search.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const active = chips.filter((c) => c.getAttribute('aria-pressed') === 'true').map((c) => c.dataset.discipline!);
+    const visible: string[] = [];
+    for (const card of cards) {
+      const text = card.dataset.search || '';
+      const ds = (card.dataset.disciplines || '').split('|');
+      const show = terms.every((t) => text.includes(t)) && (active.length === 0 || active.some((d) => ds.includes(d)));
+      card.hidden = !show;
+      if (show) visible.push(card.dataset.name!);
+    }
+    const filtered = terms.length > 0 || active.length > 0;
+    count.textContent = filtered ? `${visible.length} von ${cards.length} Vereinen` : '';
+    empty.classList.toggle('hidden', visible.length > 0);
+    document.dispatchEvent(new CustomEvent('clubs:filter', { detail: { names: visible, filtered } }));
+  }
+
+  search.addEventListener('input', apply);
+  chips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      chip.setAttribute('aria-pressed', chip.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      apply();
+    }),
+  );
+  document.getElementById('club-reset')!.addEventListener('click', () => {
+    search.value = '';
+    chips.forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    apply();
+  });
+</script>
 </BaseLayout>

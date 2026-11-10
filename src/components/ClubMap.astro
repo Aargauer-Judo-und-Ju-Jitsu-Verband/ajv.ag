@@ -1,0 +1,216 @@
+---
+/**
+ * Selbst gehostete Vereinskarte (Leaflet + OpenStreetMap), ersetzt die frühere Atlist-Einbettung.
+ * Erwartet die Vereine mit `lat`/`lng`; Vereine ohne Koordinaten werden ausgelassen.
+ */
+interface Club {
+  name: string;
+  address?: string;
+  location: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  logo?: string;
+  disciplines?: string[];
+  lat?: number;
+  lng?: number;
+}
+
+interface Props {
+  clubs: Club[];
+  height?: number;
+}
+
+const { clubs, height = 600 } = Astro.props;
+const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng === 'number');
+---
+
+<div
+  class="club-map isolate w-full bg-stone-100"
+  style={`height:${height}px`}
+  data-clubs={JSON.stringify(mapClubs)}
+  role="region"
+  aria-label="Karte der AJV-Vereine im Kanton Aargau"
+></div>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+  import aargau from '../data/aargau.json';
+
+  type Club = {
+    name: string; address?: string; location: string; phone?: string;
+    email?: string; website?: string; logo?: string; disciplines?: string[]; lat: number; lng: number;
+  };
+
+  const esc = (s: string) =>
+    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+  function popupHtml(c: Club) {
+    let h = '<div class="club-popup">';
+    h += '<div class="club-popup-head">';
+    if (c.logo) h += `<img src="${esc(c.logo)}" alt="" width="40" height="40">`;
+    h += `<h3>${esc(c.name)}</h3></div>`;
+    if (c.disciplines?.length) h += `<p class="club-popup-tags">${c.disciplines.map((d) => `<span>${esc(d)}</span>`).join('')}</p>`;
+    h += `<p>${c.address ? esc(c.address) + '<br>' : ''}${esc(c.location)}</p>`;
+    if (c.phone) h += `<p><a href="tel:${esc(c.phone.replace(/\s/g, ''))}">${esc(c.phone)}</a></p>`;
+    if (c.email) h += `<p><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></p>`;
+    if (c.website) h += `<a class="club-popup-btn" href="${esc(c.website)}" target="_blank" rel="noopener noreferrer">Zur Website</a>`;
+    return h + '</div>';
+  }
+
+  const pin = L.divIcon({
+    className: 'club-pin',
+    html: '<span></span>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
+  });
+
+  document.querySelectorAll<HTMLElement>('.club-map').forEach((el) => {
+    const clubs: Club[] = JSON.parse(el.dataset.clubs || '[]');
+    // Gesten wie bei Google Maps: Handy → ein Finger scrollt die Seite, zwei Finger bewegen/zoomen die Karte.
+    // Desktop → Ziehen mit der Maus, Zoomen mit Strg/⌘ + Mausrad (normales Scrollen scrollt die Seite).
+    const mobile = L.Browser.mobile;
+    const map = L.map(el, { minZoom: 8, dragging: !mobile, scrollWheelZoom: true });
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    // Kantonsgrenze; Fläche ausserhalb des Aargaus leicht abgeblendet
+    const ring = (aargau.features[0].geometry.coordinates[0] as number[][]).map(
+      ([lng, lat]) => [lat, lng] as [number, number],
+    );
+    const world: [number, number][] = [[90, -180], [90, 180], [-90, 180], [-90, -180]];
+    L.polygon([world, ring], { stroke: false, fillColor: '#FAFAF8', fillOpacity: 0.6, interactive: false }).addTo(map);
+    const outline = L.polygon(ring, { color: '#2A57C5', weight: 2, fill: false, interactive: false }).addTo(map);
+
+    map.fitBounds(outline.getBounds(), { padding: [12, 12] });
+    map.setMaxBounds(outline.getBounds().pad(0.6));
+
+    const markers = new Map<string, L.Marker>();
+    for (const c of clubs) {
+      const m = L.marker([c.lat, c.lng], { icon: pin, title: c.name, alt: c.name })
+        .bindPopup(popupHtml(c), { minWidth: 220, maxWidth: 280 })
+        .addTo(map);
+      markers.set(c.name, m);
+    }
+
+    // Suche/Filter der Vereinsseite: nur passende Marker zeigen und auf sie zoomen
+    document.addEventListener('clubs:filter', (e) => {
+      const { names, filtered } = (e as CustomEvent<{ names: string[]; filtered: boolean }>).detail;
+      const show = new Set(names);
+      map.closePopup();
+      for (const [name, m] of markers) {
+        if (show.has(name)) m.addTo(map);
+        else m.remove();
+      }
+      const visible = [...markers].filter(([n]) => show.has(n)).map(([, m]) => m.getLatLng());
+      if (filtered && visible.length) {
+        map.fitBounds(L.latLngBounds(visible), { padding: [40, 40], maxZoom: 12 });
+      } else {
+        map.fitBounds(outline.getBounds(), { padding: [12, 12] });
+      }
+    });
+
+    const hint = L.DomUtil.create('div', 'club-map-hint', el);
+    hint.textContent = mobile
+      ? 'Karte mit zwei Fingern bewegen'
+      : `Zum Zoomen ${/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Strg'} + Scrollen verwenden`;
+    let hintTimer: number | undefined;
+    const showHint = () => {
+      hint.classList.add('is-visible');
+      clearTimeout(hintTimer);
+      hintTimer = window.setTimeout(() => hint.classList.remove('is-visible'), 1500);
+    };
+    const hideHint = () => {
+      clearTimeout(hintTimer);
+      hint.classList.remove('is-visible');
+    };
+
+    // Capture-Phase: läuft vor Leaflets eigenem Wheel-Handler
+    el.addEventListener(
+      'wheel',
+      (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          hideHint();
+          return;
+        }
+        e.stopImmediatePropagation();
+        showHint();
+      },
+      { capture: true, passive: true },
+    );
+
+    if (mobile) {
+      el.addEventListener('touchmove', (e) => (e.touches.length === 1 ? showHint() : hideHint()), { passive: true });
+    }
+  });
+</script>
+
+<style is:global>
+  .club-pin span {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50% 50% 50% 0;
+    background: var(--color-brand-500);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+    transform: rotate(-45deg);
+  }
+  .club-pin span::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .club-map-hint {
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgb(14 32 80 / 0.45);
+    color: #fff;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .club-map-hint.is-visible { opacity: 1; transition-duration: 0.15s; }
+  .club-popup { font-family: inherit; color: var(--color-stone-600); }
+  .club-popup-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .club-popup-head img { width: 40px; height: 40px; object-fit: contain; }
+  .club-popup h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--color-stone-900); }
+  .club-popup p { margin: 2px 0 !important; font-size: 13px; }
+  .club-popup-tags span {
+    display: inline-block;
+    margin: 0 4px 4px 0;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    background: var(--color-brand-50);
+    color: var(--color-brand-700);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .club-popup a { color: var(--color-brand-600); }
+  .club-popup a.club-popup-btn {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--color-brand-500);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .club-popup a.club-popup-btn:hover { background: var(--color-brand-600); }
+</style>
