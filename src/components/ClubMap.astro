@@ -11,6 +11,7 @@ interface Club {
   email?: string;
   website?: string;
   logo?: string;
+  disciplines?: string[];
   lat?: number;
   lng?: number;
 }
@@ -39,7 +40,7 @@ const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng =
 
   type Club = {
     name: string; address?: string; location: string; phone?: string;
-    email?: string; website?: string; logo?: string; lat: number; lng: number;
+    email?: string; website?: string; logo?: string; disciplines?: string[]; lat: number; lng: number;
   };
 
   const esc = (s: string) =>
@@ -50,6 +51,7 @@ const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng =
     h += '<div class="club-popup-head">';
     if (c.logo) h += `<img src="${esc(c.logo)}" alt="" width="40" height="40">`;
     h += `<h3>${esc(c.name)}</h3></div>`;
+    if (c.disciplines?.length) h += `<p class="club-popup-tags">${c.disciplines.map((d) => `<span>${esc(d)}</span>`).join('')}</p>`;
     h += `<p>${c.address ? esc(c.address) + '<br>' : ''}${esc(c.location)}</p>`;
     if (c.phone) h += `<p><a href="tel:${esc(c.phone.replace(/\s/g, ''))}">${esc(c.phone)}</a></p>`;
     if (c.email) h += `<p><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></p>`;
@@ -85,11 +87,30 @@ const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng =
     map.fitBounds(outline.getBounds(), { padding: [12, 12] });
     map.setMaxBounds(outline.getBounds().pad(0.6));
 
+    const markers = new Map<string, L.Marker>();
     for (const c of clubs) {
-      L.marker([c.lat, c.lng], { icon: pin, title: c.name, alt: c.name })
+      const m = L.marker([c.lat, c.lng], { icon: pin, title: c.name, alt: c.name })
         .bindPopup(popupHtml(c), { minWidth: 220, maxWidth: 280 })
         .addTo(map);
+      markers.set(c.name, m);
     }
+
+    // Suche/Filter der Vereinsseite: nur passende Marker zeigen und auf sie zoomen
+    document.addEventListener('clubs:filter', (e) => {
+      const { names, filtered } = (e as CustomEvent<{ names: string[]; filtered: boolean }>).detail;
+      const show = new Set(names);
+      map.closePopup();
+      for (const [name, m] of markers) {
+        if (show.has(name)) m.addTo(map);
+        else m.remove();
+      }
+      const visible = [...markers].filter(([n]) => show.has(n)).map(([, m]) => m.getLatLng());
+      if (filtered && visible.length) {
+        map.fitBounds(L.latLngBounds(visible), { padding: [40, 40], maxZoom: 12 });
+      } else {
+        map.fitBounds(outline.getBounds(), { padding: [12, 12] });
+      }
+    });
 
     // Mausrad-Zoom erst nach Klick in die Karte, damit das Seiten-Scrollen nicht hängen bleibt
     map.on('click', () => map.scrollWheelZoom.enable());
@@ -120,6 +141,16 @@ const mapClubs = clubs.filter((c) => typeof c.lat === 'number' && typeof c.lng =
   .club-popup-head img { width: 40px; height: 40px; object-fit: contain; }
   .club-popup h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--color-stone-900); }
   .club-popup p { margin: 2px 0 !important; font-size: 13px; }
+  .club-popup-tags span {
+    display: inline-block;
+    margin: 0 4px 4px 0;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    background: var(--color-brand-50);
+    color: var(--color-brand-700);
+    font-size: 12px;
+    font-weight: 500;
+  }
   .club-popup a { color: var(--color-brand-600); }
   .club-popup a.club-popup-btn {
     display: inline-block;
