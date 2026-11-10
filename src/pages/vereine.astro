@@ -1,26 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ClubMap from '../components/ClubMap.astro';
-
-// disciplines: Sportarten für den Filter (Judo, Ju-Jitsu, Aikido, A-Judo)
-// lat/lng: Standort des Markers auf der Karte (Rechtsklick in Google Maps / map.geo.admin.ch → Koordinaten kopieren)
-
-const clubs: { name: string; address?: string; location: string; phone?: string; email?: string; website?: string; logo: string; disciplines: string[]; lat: number; lng: number }[] = [
-  { name: 'JJC Aarau', address: 'Delfstrasse 44', location: '5000 Aarau', phone: '062 824 33 66', website: 'http://www.jjjcaarau.ch/', logo: '/images/clubs/aarau.webp', disciplines: ['Judo', 'Ju-Jitsu'], lat: 47.3948, lng: 8.0598 },
-  { name: 'JC Baden-Wettingen', location: 'Baden-Wettingen', email: 'info@jcbw.ch', website: 'http://www.jcbw.ch/', logo: '/images/clubs/baden-wettingen.webp', disciplines: ['Judo'], lat: 47.469, lng: 8.315 },
-  { name: 'JJJC Brugg', location: 'Brugg', website: 'http://www.jjjcbrugg.ch/', logo: '/images/clubs/brugg.webp', disciplines: ['Judo', 'Ju-Jitsu'], lat: 47.4792, lng: 8.1999 },
-  { name: 'JC Bad Zurzach', location: 'Bad Zurzach', phone: '+41 79 578 35 87', email: 'info@jcbz.ch', website: 'http://www.jcbz.ch/', logo: '/images/clubs/bad-zurzach.webp', disciplines: ['Judo'], lat: 47.5876, lng: 8.293 },
-  { name: 'Bushido Frick', address: 'Gänsacker 12B', location: '5070 Frick', phone: '+41 76 202 92 66', email: 'dlandis86@gmail.com', website: 'https://bushido-frick.ch/', logo: '/images/clubs/bushido-frick.webp', disciplines: ['Judo'], lat: 47.5109, lng: 8.0156 },
-  { name: 'Judo Club Arashi Kulm', location: '5722 Gränichen', phone: '+41 79 793 74 28', website: 'http://www.judo-kulm.ch/', logo: '/images/clubs/arashi-kulm.webp', disciplines: ['Judo'], lat: 47.3527, lng: 8.1081 },
-  { name: 'Aikido- und Judoschule Lenzburg', location: '5600 Lenzburg', phone: '062 892 39 70', website: 'http://www.okami.ch/', logo: '/images/clubs/lenzburg.webp', disciplines: ['Aikido', 'Judo'], lat: 47.3865, lng: 8.1822 },
-  { name: 'Judo Club Magden', location: '4312 Magden', website: 'https://judoclubmagden.ch/', logo: '/images/clubs/magden.webp', disciplines: ['Judo'], lat: 47.5216, lng: 7.811 },
-  { name: 'JJJC Möhlin', location: '4313 Möhlin', phone: '061 421 44 45', email: 'info@jjjcmoehlin.ch', website: 'https://www.jjjcmoehlin.ch/', logo: '/images/clubs/moehlin.webp', disciplines: ['Judo', 'Ju-Jitsu'], lat: 47.5646, lng: 7.8549 },
-  { name: 'Movimento Wohlen', location: '5610 Wohlen', phone: '+41 56 621 19 44', email: 'info@movimento-wohlen.ch', website: 'https://www.movimento-wohlen.ch/', logo: '/images/clubs/movimento-wohlen.webp', disciplines: ['Judo'], lat: 47.3546, lng: 8.2822 },
-  { name: 'Judo Club Muri', location: '5630 Muri', phone: '+41 79 245 91 51', email: 'rahel.kuhn@bluewin.ch', website: 'http://www.judoclubmuri.ch/', logo: '/images/clubs/muri.webp', disciplines: ['Judo'], lat: 47.2724, lng: 8.3403 },
-  { name: 'Judo Club Reinach AG', location: '4663 Aarburg', phone: '+41 62 791 69 82', email: 'marti.matthias@bluewin.ch', website: 'http://www.judoclub-reinach.ch/', logo: '/images/clubs/reinach.webp', disciplines: ['Judo'], lat: 47.2625, lng: 8.1803 },
-  { name: 'Judo und SVC Rothrist', address: 'Robert-Barth-Weg 2c', location: '4852 Rothrist', email: 'praesident@judoclubrothrist.ch', website: 'http://www.judoclubrothrist.ch/', logo: '/images/clubs/rothrist.webp', disciplines: ['Judo'], lat: 47.2999, lng: 7.8865 },
-  { name: 'Judo und Aikido Club Wohlen', location: '5610 Wohlen', phone: '+41 79 586 72 01', email: 'info@jacwohlen.ch', website: 'https://jacwohlen.ch/', logo: '/images/clubs/jac-wohlen.webp', disciplines: ['Judo', 'Aikido', 'A-Judo'], lat: 47.3505, lng: 8.2700 },
-];
+import { clubs } from '../data/clubs';
 
 // Filter-Buttons, immer alle angezeigt (auch wenn noch kein Verein die Sportart hat)
 const disciplines = ['Judo', 'Ju-Jitsu', 'Aikido', 'A-Judo'];
@@ -125,6 +106,32 @@ const disciplines = ['Judo', 'Ju-Jitsu', 'Aikido', 'A-Judo'];
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                   </svg>
                   <a href={club.website} target="_blank" rel="noopener noreferrer" class="hover:text-brand-500 transition-colors">Website</a>
+                </p>
+              )}
+              {club.news && (
+                <p class="flex items-center gap-2">
+                  <svg class="w-4 h-4 shrink-0 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                  <a href={club.news} target="_blank" rel="noopener noreferrer" class="hover:text-brand-500 transition-colors">News des Vereins</a>
+                </p>
+              )}
+              {(club.instagram || club.facebook) && (
+                <p class="flex items-center gap-3 pt-1">
+                  {club.instagram && (
+                    <a href={club.instagram} target="_blank" rel="noopener noreferrer" aria-label={`${club.name} auf Instagram`} class="text-stone-400 hover:text-brand-500 transition-colors">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.72 3.72 0 01-1.38-.9 3.72 3.72 0 01-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.12 1.38A5.86 5.86 0 00.63 4.14C.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.72 1.46 1.38 2.12a5.86 5.86 0 002.13 1.38c.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56a5.86 5.86 0 002.12-1.38 5.86 5.86 0 001.38-2.12c.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91a5.86 5.86 0 00-1.38-2.12A5.86 5.86 0 0019.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 100 12.32 6.16 6.16 0 000-12.32zM12 16a4 4 0 110-8 4 4 0 010 8zm6.4-11.85a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z" />
+                      </svg>
+                    </a>
+                  )}
+                  {club.facebook && (
+                    <a href={club.facebook} target="_blank" rel="noopener noreferrer" aria-label={`${club.name} auf Facebook`} class="text-stone-400 hover:text-brand-500 transition-colors">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.5h-2.8V24C19.62 23.1 24 18.1 24 12.07z" />
+                      </svg>
+                    </a>
+                  )}
                 </p>
               )}
             </div>
